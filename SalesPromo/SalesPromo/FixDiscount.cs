@@ -68,10 +68,7 @@ namespace SalesPromo
 
                 oForm.Items.Item("tab2").Click();
                 oForm.Items.Item("tab1").Click();
-
-                // Generate Code
-                //string runCode = GenerateCode(ref oSBOCompany, ref oSBOApplication);
-                //dtSource.SetValue("Code", 0, runCode);
+                
                 oForm.Items.Item("tCustCd").Click();
 
                 Utils.releaseObject(dtSource);
@@ -159,7 +156,7 @@ namespace SalesPromo
                             dtSource.SetValue("U_SOL_ITEMNAME", GeneralVariables.iDelRow, "");
                             dtSource.SetValue("U_SOL_ITEMDISC", GeneralVariables.iDelRow, "0");
                         }
-                        
+
                         oMtx.LoadFromDataSource();
 
                         for (int i = 1; i <= oMtx.RowCount; i++)
@@ -595,7 +592,7 @@ namespace SalesPromo
             try
             {
                 if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
-                    oRec.DoQuery("CALL SOL_SP_ADDON_FD_CODE");
+                    oRec.DoQuery("CALL SOL_SP_ADDON_FD_CODE ('" + custCode + "')");
                 else
                     oRec.DoQuery("EXEC SOL_SP_ADDON_FD_CODE @CUSTCODE = '" + custCode + "'");
 

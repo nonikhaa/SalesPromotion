@@ -34,8 +34,8 @@ namespace SalesPromo
                 CreateUDO();
                 CreateMenu();
                 CreateFolder();
-                CreateFMS();
                 CreateSP();
+                CreateFMS();
 
                 oSBOApplication.StatusBar.SetText(addonName + " Add-On Sales Promotion Connected", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
             }
@@ -332,8 +332,16 @@ namespace SalesPromo
             string queryCategory = "ADDON - Periodic Discount";
             string formId = "PRDDISC";
 
+            if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
+            {
+                Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - PRDDISC - Area", "HANA - SOL - PRDDISC - Area.sql");
+            }
+            else
+            {
+                Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - PRDDISC - Area", "SQL - SOL - PRDDISC - Area.sql");
+            }
+
             // Create query from file
-            Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - PRDDISC - Area", "SOL - PRDDISC - Area.sql");
             Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - PRDDISC - Customer Code", "SOL - PRDDISC - Customer Code.sql");
             Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - PRDDISC - Item Code", "SOL - PRDDISC - Item Code.sql");
             Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - PRDDISC - Item Name", "SOL - PRDDISC - Item Name.sql");
@@ -358,8 +366,15 @@ namespace SalesPromo
             string queryCategory = "ADDON - Fix Discount";
             string formId = "FIXDISC";
 
-            // Create query from file
-            Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - FIXDISC - Area", "SOL - FIXDISC - Area.sql");
+            if(oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
+            {
+                Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - FIXDISC - Area", "HANA - SOL - FIXDISC - Area.sql");
+            }
+            else
+            {
+                Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - FIXDISC - Area", "SQL - SOL - FIXDISC - Area.sql");
+            }
+            
             Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - FIXDISC - Brand Code", "SOL - FIXDISC - Brand Code.sql");
             Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - FIXDISC - Item Code", "SOL - FIXDISC - Item Code.sql");
 
@@ -532,6 +547,7 @@ namespace SalesPromo
                             qSPValidation = qSPValidation.Substring(0, qSPValidation.ToLower().LastIndexOf(b.ToLower()))
                                             + qCustomSPValidation
                                             + qSPValidation.Substring(qSPValidation.ToLower().LastIndexOf(b.ToLower()) + b.Length);
+                            oRec.DoQuery(qSPValidation);
                         }
                     }
                     #endregion
@@ -577,12 +593,11 @@ namespace SalesPromo
                             qSPValidation = qSPValidation.Substring(0, qSPValidation.ToLower().LastIndexOf(b.ToLower()))
                                             + qCustomSPValidation
                                             + qSPValidation.Substring(qSPValidation.ToLower().LastIndexOf(b.ToLower()) + b.Length);
+                            oRec.DoQuery(qSPValidation);
                         }
                     }
                     #endregion
                 }
-
-                oRec.DoQuery(qSPValidation);
             }
             catch (Exception ex)
             {

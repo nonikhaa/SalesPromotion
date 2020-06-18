@@ -1,3 +1,0 @@
-SELECT 	"CardName" 
-FROM 	OCRD 
-WHERE 	"CardCode" = $[@SOL_PRDDISC_D1.U_SOL_CARDCODE]

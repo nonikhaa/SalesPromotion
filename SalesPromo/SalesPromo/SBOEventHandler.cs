@@ -78,7 +78,7 @@ namespace SalesPromo
                     case "51115": prdDisc.MenuEvent_PrdDisc(ref oSBOCompany, ref oSBOApplication, ref pVal, out BubbleEvent); break;
                     case "32323": fixDisc.MenuEvent_FixDisc(ref oSBOCompany, ref oSBOApplication, ref pVal, out BubbleEvent); break;
 
-                    case "1282": MenuEventHandlerAdd(ref oSBOCompany, ref oSBOApplication,ref  pVal, out BubbleEvent); break;
+                    case "1282": MenuEventHandlerAdd(ref oSBOCompany, ref oSBOApplication, ref pVal, out BubbleEvent); break;
 
                     case "PrdDiscAdd": prdDisc.MenuEvent_PrdDiscAdd(ref oSBOApplication, ref pVal, ref BubbleEvent); break;
                     case "PrdDiscDel": prdDisc.MenuEvent_PrdDiscDel(ref oSBOApplication, ref pVal, ref BubbleEvent); break;
@@ -138,13 +138,13 @@ namespace SalesPromo
             {
                 if (pVal.EventType != BoEventTypes.et_FORM_UNLOAD)
                 {
-                    if(pVal.FormTypeEx == "CASHDISC")
+                    if (pVal.FormTypeEx == "CASHDISC")
                         cashDisc.ItemEvent_CashDisc(ref oSBOCompany, ref oSBOApplication, FormUID, ref pVal, ref bubbleEvent);
-                    else if(pVal.FormTypeEx == "PRDDISC")
+                    else if (pVal.FormTypeEx == "PRDDISC")
                         prdDisc.ItemEvent_PrdDisc(ref oSBOCompany, ref oSBOApplication, FormUID, ref pVal, ref bubbleEvent);
-                    else if(pVal.FormTypeEx == "FIXDISC")
+                    else if (pVal.FormTypeEx == "FIXDISC")
                         fixDisc.ItemEvent_PrdDisc(ref oSBOCompany, ref oSBOApplication, FormUID, ref pVal, ref bubbleEvent);
-                    else if(pVal.FormType == 139)
+                    else if (pVal.FormType == 139)
                         salesOrder.ItemEvents_SalesOrder(ref oSBOCompany, ref oSBOApplication, FormUID, ref pVal, ref bubbleEvent);
                 }
             }
@@ -159,20 +159,21 @@ namespace SalesPromo
         /// Event when click Add Menu (CTRL+A)
         /// </summary>
         private void MenuEventHandlerAdd(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplicaton
-                                        , ref SAPbouiCOM.MenuEvent pVal, out bool bubbleEvent )
+                                        , ref SAPbouiCOM.MenuEvent pVal, out bool bubbleEvent)
         {
             bubbleEvent = true;
 
             if (pVal.BeforeAction == false)
             {
                 Form oForm = oSBOApplication.Forms.ActiveForm;
-                
-                OneTimeDiscount oneTimeDisc = new OneTimeDiscount();
+
                 PeriodicDiscount prdDisc = new PeriodicDiscount();
+                FixDiscount fixDisc = new FixDiscount();
 
                 switch (oForm.TypeEx)
                 {
-                    case "PRDDISC": prdDisc.Template_Add_PrdDisc(ref oSBOCompany, ref oSBOApplication, ref oForm);break;
+                    case "PRDDISC": prdDisc.Template_Add_PrdDisc(ref oSBOCompany, ref oSBOApplication, ref oForm); break;
+                    case "FIXDISC": fixDisc.Template_Add_FixDisc(ref oSBOCompany, ref oSBOApplication, ref oForm); break;
                 }
 
                 Utils.releaseObject(oForm);

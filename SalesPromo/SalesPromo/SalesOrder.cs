@@ -211,7 +211,6 @@ namespace SalesPromo
                     double qty = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("11").Cells.Item(i).Specific.Value);
                     double discount = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("15").Cells.Item(i).Specific.Value);
 
-
                     #region Fix Discount
                     string fixDiscCode = string.Empty;
                     double fixDisc = 0;
@@ -221,7 +220,7 @@ namespace SalesPromo
                         string query = string.Empty;
 
                         if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
-                            query = "";
+                            query = "CALL SOL_SP_ADDON_GET_FIXDISC ('" + itemCode + "', '" + cardCode + "', '" + area + "')";
                         else
                             query = "EXEC SOL_SP_ADDON_GET_FIXDISC @ITEMCODE = '" + itemCode + "', @CUSTCODE = '" + cardCode + "', @AREA = '" + area + "'";
 
@@ -249,7 +248,7 @@ namespace SalesPromo
                         string query = string.Empty;
 
                         if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
-                            query = "";
+                            query = "CALL SOL_SP_ADDON_GET_PRDDISC ('" + itemCode + "', '" + cardCode + "', '" + area + "', '" + postingDate + "', '" + qty + "')";
                         else
                             query = "EXEC SOL_SP_ADDON_GET_PRDDISC @ITEMCODE = '" + itemCode + "', @CUSTCODE = '" + cardCode + "', @AREA = '" + area + "', @POSTINGDT = '" + postingDate + "', @QTY = '" + qty + "'";
 
@@ -261,16 +260,15 @@ namespace SalesPromo
 
                             if (oRec.Fields.Item("DiscType").Value == "1")
                             {
-                                if (oRec.Fields.Item("CustCount").Value > 0 && oRec.Fields.Item("Customer").Value == cardCode)
+                                if ((oRec.Fields.Item("CustType").Value == "All Customer" || oRec.Fields.Item("CustType").Value == "Per Customer") && oRec.Fields.Item("CustCode").Value == cardCode)
                                 {
-                                    prdDisc = Convert.ToDouble(Utils.FormattedStringAmount(oRec.Fields.Item("Disc").Value));
-
+                                    prdDisc = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("DiscPrcnt").Value));
                                     oMtx.Columns.Item("U_SOL_PDCD").Cells.Item(i).Specific.Value = prdDiscCode;
                                     oMtx.Columns.Item("U_SOL_PD").Cells.Item(i).Specific.Value = prdDisc;
                                 }
-                                else if (oRec.Fields.Item("CustCount").Value == 0)
+                                else if (oRec.Fields.Item("CustType").Value == "All Customer")
                                 {
-                                    prdDisc = Convert.ToDouble(Utils.FormattedStringAmount(oRec.Fields.Item("Disc").Value));
+                                    prdDisc = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("DiscPrcnt").Value));
 
                                     oMtx.Columns.Item("U_SOL_PDCD").Cells.Item(i).Specific.Value = prdDiscCode;
                                     oMtx.Columns.Item("U_SOL_PD").Cells.Item(i).Specific.Value = prdDisc;
@@ -278,15 +276,14 @@ namespace SalesPromo
                             }
                             else
                             {
-
-                                if (oRec.Fields.Item("CustCount").Value > 0 && oRec.Fields.Item("Customer").Value == cardCode)
+                                if ((oRec.Fields.Item("CustType").Value == "All Customer" || oRec.Fields.Item("CustType").Value == "Per Customer") && oRec.Fields.Item("CustCode").Value == cardCode)
                                 {
                                     int currentRow = oMtx.RowCount;
-                                    double qtyFree = Convert.ToDouble(Utils.FormattedStringAmount(oRec.Fields.Item("QtyFree").Value));
-                                    double minQty = Convert.ToDouble(Utils.FormattedStringAmount(oRec.Fields.Item("Minqty").Value));
+                                    double qtyFree = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("QtyFree").Value));
+                                    double minQty = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinqtyBG").Value));
                                     string kelipatan = oRec.Fields.Item("Kelipatan").Value;
 
-                                    oMtx.Columns.Item("1").Cells.Item(currentRow).Specific.Value = oRec.Fields.Item("Item").Value;
+                                    oMtx.Columns.Item("1").Cells.Item(currentRow).Specific.Value = oRec.Fields.Item("ItemCodeBG").Value;
                                     oMtx.Columns.Item("U_SOL_PDCD").Cells.Item(currentRow).Specific.Value = oRec.Fields.Item("Code").Value;
                                     oMtx.Columns.Item("U_SOL_FLGBNS").Cells.Item(currentRow).Specific.Value = "Y";
 
@@ -295,14 +292,14 @@ namespace SalesPromo
                                     else
                                         oMtx.Columns.Item("11").Cells.Item(currentRow).Specific.Value = Math.Round(qtyFree * (qty / minQty), 0);
                                 }
-                                else if (oRec.Fields.Item("CustCount").Value == 0)
+                                else if (oRec.Fields.Item("CustType").Value == "All Customer")
                                 {
                                     int currentRow = oMtx.RowCount;
-                                    double qtyFree = Convert.ToDouble(Utils.FormattedStringAmount(oRec.Fields.Item("QtyFree").Value));
-                                    double minQty = Convert.ToDouble(Utils.FormattedStringAmount(oRec.Fields.Item("Minqty").Value));
+                                    double qtyFree = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("QtyFree").Value));
+                                    double minQty = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinqtyBG").Value));
                                     string kelipatan = oRec.Fields.Item("Kelipatan").Value;
 
-                                    oMtx.Columns.Item("1").Cells.Item(currentRow).Specific.Value = oRec.Fields.Item("Item").Value;
+                                    oMtx.Columns.Item("1").Cells.Item(currentRow).Specific.Value = oRec.Fields.Item("ItemCodeBG").Value;
                                     oMtx.Columns.Item("U_SOL_PDCD").Cells.Item(currentRow).Specific.Value = oRec.Fields.Item("Code").Value;
                                     oMtx.Columns.Item("U_SOL_FLGBNS").Cells.Item(currentRow).Specific.Value = "Y";
 
@@ -341,7 +338,7 @@ namespace SalesPromo
                     string query = string.Empty;
 
                     if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
-                        query = "";
+                        query = "CALL SOL_SP_ADDON_GET_CASHDISC ('" + cardCode + "', '" + currency + "', '" + price + "')";
                     else
                         query = "EXEC SOL_SP_ADDON_GET_CASHDISC @CUSTCODE = '" + cardCode + "', @CURR = '" + currency + "', @PRICE = '" + price + "'";
 
@@ -366,6 +363,7 @@ namespace SalesPromo
             finally
             {
                 oProgressBar.Stop();
+                if (oForm != null) oForm.Freeze(false);
 
                 Utils.releaseObject(oForm);
                 Utils.releaseObject(oMtx);
