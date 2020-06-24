@@ -105,4 +105,37 @@ namespace SalesPromo
             BonusItem = bonusItem;
         }
     }
+
+    public class MatrixSo
+    {
+        public string ItemCode;
+        public double Quantity;
+        //public double Row;
+        public double SapDisc;
+        public string Address;
+        public string FlagBonus;
+
+    }
+
+    public class OutputDiscQuery
+    {
+        public string DiscountType;
+        public string CustomerType;
+        public string CustomerCode;
+        public string ItemCode;
+        
+        public string FixDiscCode;
+        public double FixDisc;
+
+        public string PrdDiscCode;
+        public double PrcntDisc;
+        public double PrcntMinQty;
+
+        public string BXGYItemCd;
+        public double BXGYMinQty;
+        public string BXGYItemBns;
+        public double BXGYQtyFree;
+        public string Kelipatan;
+
+    }
 }

@@ -11,9 +11,9 @@ using System.IO;
 
 namespace SalesPromo
 {
-    public static class Utils
+    public class Utils
     {
-        public static void CreateUDF(SAPbobsCOM.Company oSBOCompany, string TableName, string FieldName, string FieldDescription, SAPbobsCOM.BoFieldTypes Type)
+        public void CreateUDF(SAPbobsCOM.Company oSBOCompany, string TableName, string FieldName, string FieldDescription, SAPbobsCOM.BoFieldTypes Type)
         {
             CreateUDF(oSBOCompany, TableName, FieldName, FieldDescription, Type, SAPbobsCOM.BoFldSubTypes.st_None);
         }
@@ -23,7 +23,7 @@ namespace SalesPromo
             CreateUDF(oSBOCompany, TableName, FieldName, FieldDescription, Type, SubType, 0);
         }
 
-        public static void CreateUDF(SAPbobsCOM.Company oSBOCompany, string TableName, string FieldName, string FieldDescription, SAPbobsCOM.BoFieldTypes Type, int EditSize)
+        public void CreateUDF(SAPbobsCOM.Company oSBOCompany, string TableName, string FieldName, string FieldDescription, SAPbobsCOM.BoFieldTypes Type, int EditSize)
         {
             CreateUDF(oSBOCompany, TableName, FieldName, FieldDescription, Type, SAPbobsCOM.BoFldSubTypes.st_None, EditSize);
         }
@@ -183,7 +183,7 @@ namespace SalesPromo
             GC.Collect();
         }
 
-        public static void CreateMenu(SAPbobsCOM.Company oSBOCompany, SAPbouiCOM.Application oSBOApplication, string ParentMenuUID, string MenuUID, SAPbouiCOM.BoMenuType MenuType, string MenuName, string MenuImage = null, int MenuPosition = 0, bool DeleteIfExists = false)
+        public void CreateMenu(SAPbobsCOM.Company oSBOCompany, SAPbouiCOM.Application oSBOApplication, string ParentMenuUID, string MenuUID, SAPbouiCOM.BoMenuType MenuType, string MenuName, string MenuImage = null, int MenuPosition = 0, bool DeleteIfExists = false)
         {
             SAPbouiCOM.MenuItem oMenuItem;
             SAPbouiCOM.Menus oMenus;
@@ -234,7 +234,7 @@ namespace SalesPromo
             }
         }
 
-        public static void CreateUDO(SAPbobsCOM.Company oSBOCompany, string ObjectName, SAPbobsCOM.BoUDOObjType ObjectType
+        public void CreateUDO(SAPbobsCOM.Company oSBOCompany, string ObjectName, SAPbobsCOM.BoUDOObjType ObjectType
             , string TableName, SAPbobsCOM.BoYesNoEnum CanApprove, SAPbobsCOM.BoYesNoEnum CanArchive
             , SAPbobsCOM.BoYesNoEnum CanCancel, SAPbobsCOM.BoYesNoEnum CanClose, SAPbobsCOM.BoYesNoEnum CanCreateDefaultForm
             , SAPbobsCOM.BoYesNoEnum CanDelete, SAPbobsCOM.BoYesNoEnum CanFind, SAPbobsCOM.BoYesNoEnum CanLog
@@ -309,7 +309,7 @@ namespace SalesPromo
             }
         }
 
-        public static void CreateUDO(SAPbobsCOM.Company oSBOCompany, string ObjectName, SAPbobsCOM.BoUDOObjType ObjectType,
+        public void CreateUDO(SAPbobsCOM.Company oSBOCompany, string ObjectName, SAPbobsCOM.BoUDOObjType ObjectType,
             string TableName, SAPbobsCOM.BoYesNoEnum CanApprove, SAPbobsCOM.BoYesNoEnum CanArchive
             , SAPbobsCOM.BoYesNoEnum CanCancel, SAPbobsCOM.BoYesNoEnum CanClose, SAPbobsCOM.BoYesNoEnum CanCreateDefaultForm
             , SAPbobsCOM.BoYesNoEnum CanDelete, SAPbobsCOM.BoYesNoEnum CanFind, SAPbobsCOM.BoYesNoEnum CanLog
@@ -400,7 +400,7 @@ namespace SalesPromo
             }
         }
 
-        public static void CreateUDOTemplate(ref SAPbobsCOM.Company oCompany
+        public void CreateUDOTemplate(ref SAPbobsCOM.Company oCompany
                              , ref SAPbouiCOM.Application oSBOApplication
                              , string UDOCode
                              , string UDOName
@@ -1064,7 +1064,7 @@ namespace SalesPromo
         }
 
         // 20140225
-        public static DateTime ConvertToDateTime(string SBODate)
+        public DateTime ConvertToDateTime(string SBODate)
         {
             return new DateTime(int.Parse(SBODate.Substring(0, 4)), int.Parse(SBODate.Substring(4, 2)), int.Parse(SBODate.Substring(6, 2)));
         }
@@ -1135,7 +1135,7 @@ namespace SalesPromo
             return result;
         }
 
-        public static System.Data.DataTable ConvertRecordsetToDataTable(SAPbobsCOM.Company oSBOCompany, string sql)
+        public System.Data.DataTable ConvertRecordsetToDataTable(SAPbobsCOM.Company oSBOCompany, string sql)
         {
             SAPbobsCOM.Recordset oRec;
             oRec = oSBOCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
