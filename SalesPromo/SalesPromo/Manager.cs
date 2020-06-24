@@ -483,6 +483,7 @@ namespace SalesPromo
                     Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_GET_PRDDISC.sql", "SOL_SP_ADDON_GET_PRDDISC");
                     Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_GET_CASHDISC.sql", "SOL_SP_ADDON_GET_CASHDISC");
                     Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_GET_FIXDISC.sql", "SOL_SP_ADDON_GET_FIXDISC");
+                    Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SBO_SP_TRANSACTIONNOTIFICATION_ADDONSO.sql", "SBO_SP_TRANSACTIONNOTIFICATION_ADDONSO");
                 }
                 else
                 {
