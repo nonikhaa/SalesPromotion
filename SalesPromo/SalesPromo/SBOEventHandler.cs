@@ -77,8 +77,17 @@ namespace SalesPromo
                     case "96969": oneTimeDisc.MenuEvent_CashDisc(ref oSBOApplication, ref pVal, out BubbleEvent); break;
                     case "51115": prdDisc.MenuEvent_PrdDisc(ref oSBOCompany, ref oSBOApplication, ref pVal, out BubbleEvent); break;
                     case "32323": fixDisc.MenuEvent_FixDisc(ref oSBOCompany, ref oSBOApplication, ref pVal, out BubbleEvent); break;
-
+                    
+                    // Add
                     case "1282": MenuEventHandlerAdd(ref oSBOCompany, ref oSBOApplication, ref pVal, out BubbleEvent); break;
+                    // next record
+                    case "1288": MenuEventHandlerNextPrev(ref oSBOCompany, ref oSBOApplication, ref pVal, out BubbleEvent); break;
+                    // previous record
+                    case "1289": MenuEventHandlerNextPrev(ref oSBOCompany, ref oSBOApplication, ref pVal, out BubbleEvent); break;
+                    // first data record
+                    case "1290": MenuEventHandlerNextPrev(ref oSBOCompany, ref oSBOApplication, ref pVal, out BubbleEvent); break;
+                    // last data record
+                    case "1291": MenuEventHandlerNextPrev(ref oSBOCompany, ref oSBOApplication, ref pVal, out BubbleEvent); break;
 
                     case "PrdDiscAdd": prdDisc.MenuEvent_PrdDiscAdd(ref oSBOApplication, ref pVal, ref BubbleEvent); break;
                     case "PrdDiscDel": prdDisc.MenuEvent_PrdDiscDel(ref oSBOApplication, ref pVal, ref BubbleEvent); break;
@@ -177,6 +186,23 @@ namespace SalesPromo
                 }
 
                 Utils.releaseObject(oForm);
+            }
+        }
+
+        private void MenuEventHandlerNextPrev(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplicaton
+                                        , ref SAPbouiCOM.MenuEvent pVal, out bool bubbleEvent)
+        {
+            bubbleEvent = true;
+
+            if (pVal.BeforeAction == false)
+            {
+                Form oForm = oSBOApplication.Forms.ActiveForm;
+                PeriodicDiscount prdDisc = new PeriodicDiscount();
+
+                switch (oForm.TypeEx)
+                {
+                    case "PRDDISC": prdDisc.NextPrev_PrdDisc(ref oSBOCompany, ref oSBOApplication, ref oForm); break;
+                }
             }
         }
     }

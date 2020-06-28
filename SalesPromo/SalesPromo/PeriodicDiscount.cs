@@ -92,6 +92,33 @@ namespace SalesPromo
         }
 
         /// <summary>
+        /// Saat button next, previous, last record, first record di click
+        /// </summary>
+        public void NextPrev_PrdDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, ref Form oForm)
+        {
+            try
+            {
+                DBDataSource dtSource = null;
+                dtSource = oForm.DataSources.DBDataSources.Item("@SOL_PRDDISC_H");
+
+                if(dtSource.GetValue("U_SOL_CUSTTYPE", 0) == "Per Customer")
+                    oForm.Items.Item("mt_1").Enabled = true;
+                else
+                    oForm.Items.Item("mt_1").Enabled = false;
+
+                Utils.releaseObject(dtSource);
+            }
+            catch(Exception ex)
+            {
+                oSBOApplication.MessageBox(ex.Message);
+            }
+            finally
+            {
+                oForm.Freeze(false);
+            }
+        }
+
+        /// <summary>
         /// Clear Data and Load Data Source
         /// </summary>
         private void Template_Clear_PrdDisc(ref Form oForm)

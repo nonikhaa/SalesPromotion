@@ -207,229 +207,14 @@ namespace SalesPromo
             //if(oUdfForm.Items.Item("SOL_TIPE_SO"))
             try
             {
-                #region Grouping Item
-                List<MatrixSo> oMtxSO = new List<MatrixSo>();
-                for (int i = 1; i < oMtx.RowCount; i++)
-                {
-                    string itemCode = oMtx.Columns.Item("1").Cells.Item(i).Specific.Value;
-                    double qty = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("11").Cells.Item(i).Specific.Value);
-                    string address = oMtx.Columns.Item("275").Cells.Item(i).Specific.Value;
-                    double discount = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("15").Cells.Item(i).Specific.Value);
-                    string detailStatus = oMtx.Columns.Item("40").Cells.Item(i).Specific.Value;
-                    string itemBonus = oMtx.Columns.Item("U_SOL_FLGBNS").Cells.Item(i).Specific.Value;
-
-                    if (detailStatus == "O")
-                    {
-                        MatrixSo mtx = new MatrixSo();
-                        if (oMtxSO.Select(o => o.ItemCode).ToList().Contains(itemCode))
-                        {
-                            oMtxSO.Where(o => o.ItemCode == itemCode).ToList().ForEach(a => a.Quantity += qty);
-                        }
-                        else
-                        {
-                            mtx.ItemCode = itemCode;
-                            mtx.Quantity = qty;
-                            mtx.Address = address;
-                            mtx.SapDisc = discount;
-                            mtx.FlagBonus = itemBonus;
-
-                            oMtxSO.Add(mtx);
-                        }
-                    }
-                }
-                #endregion
-
-                #region Get Discount
+                List<MatrixSo> GroupFixDisc = null;
+                List<MatrixSo> GroupPrdDisc = null;
                 List<OutputDiscQuery> listDiscSO = new List<OutputDiscQuery>();
-                foreach (var detail in oMtxSO)
-                {
-                    OutputDiscQuery discSO = new OutputDiscQuery();
-                    string address = detail.Address;
-                    string area = GetAreaByCust(ref oSBOCompany, ref oSBOApplication, cardCode, address);
-                    double discount = detail.SapDisc;
 
-                    #region Fix Discount
+                GroupingItem(ref oSBOCompany, ref oSBOApplication, ref oMtx, cardCode, out GroupFixDisc, out GroupPrdDisc);
+                GetDiscount(ref oSBOCompany, ref oSBOApplication, ref oMtx, cardCode, postingDate, out listDiscSO, GroupFixDisc, GroupPrdDisc);
+                ApplyDiscount(ref oSBOCompany, ref oSBOApplication, ref oMtx, oForm, oUdfForm, cardCode, listDiscSO, GroupFixDisc, GroupPrdDisc);
 
-                    if (detail.FlagBonus != "Y")
-                    {
-                        string query = string.Empty;
-
-                        if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
-                            query = "CALL SOL_SP_ADDON_GET_FIXDISC ('" + detail.ItemCode + "', '" + cardCode + "', '" + area + "')";
-                        else
-                            query = "EXEC SOL_SP_ADDON_GET_FIXDISC @ITEMCODE = '" + detail.ItemCode + "', @CUSTCODE = '" + cardCode + "', @AREA = '" + area + "'";
-
-                        oRec.DoQuery(query);
-                        if (oRec.RecordCount > 0)
-                        {
-                            discSO.ItemCode = detail.ItemCode;
-                            discSO.FixDiscCode = oRec.Fields.Item("Code").Value;
-                            discSO.FixDisc = Convert.ToDouble(Utils.FormattedStringAmount(oRec.Fields.Item("Disc").Value));
-                            listDiscSO.Add(discSO);
-                        }
-                    }
-
-                    #endregion
-
-                    #region PeriodicDiscount
-                    if (detail.FlagBonus != "Y")
-                    {
-                        string query = string.Empty;
-
-                        if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
-                            query = "CALL SOL_SP_ADDON_GET_PRDDISC ('" + detail.ItemCode + "', '" + cardCode + "', '" + area + "', '" + postingDate + "', '" + detail.Quantity + "')";
-                        else
-                            query = "EXEC SOL_SP_ADDON_GET_PRDDISC @ITEMCODE = '" + detail.ItemCode + "', @CUSTCODE = '" + cardCode + "', @AREA = '" + area + "', @POSTINGDT = '" + postingDate + "', @QTY = '" + detail.Quantity + "'";
-
-                        oRec.DoQuery(query);
-                        if (oRec.RecordCount > 0)
-                        {
-                            if (listDiscSO.Select(o => o.ItemCode).ToList().Contains(detail.ItemCode))
-                            {
-                                listDiscSO.Where(o => o.ItemCode == detail.ItemCode).ToList()
-                                    .ForEach(a =>
-                                    {
-                                        a.DiscountType = oRec.Fields.Item("DiscType").Value;
-                                        a.CustomerType = oRec.Fields.Item("CustType").Value;
-                                        a.CustomerCode = oRec.Fields.Item("CustCode").Value;
-                                        a.PrdDiscCode = oRec.Fields.Item("Code").Value;
-                                        a.PrcntDisc = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("DiscPrcnt").Value));
-                                        a.PrcntMinQty = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinQtyPrcnt").Value));
-                                        a.BXGYItemCd = oRec.Fields.Item("ItemCodeBG").Value;
-                                        a.BXGYMinQty = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinQtyBG").Value));
-                                        a.BXGYItemBns = oRec.Fields.Item("ItemCodeFree").Value;
-                                        a.BXGYQtyFree = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("QtyFree").Value));
-                                        a.Kelipatan = oRec.Fields.Item("Kelipatan").Value;
-                                    });
-                            }
-                            else
-                            {
-                                discSO.ItemCode = oRec.Fields.Item("ItemCodeBG").Value;
-                                discSO.DiscountType = oRec.Fields.Item("DiscType").Value;
-                                discSO.CustomerType = oRec.Fields.Item("CustType").Value;
-                                discSO.CustomerCode = oRec.Fields.Item("CustCode").Value;
-                                discSO.PrdDiscCode = oRec.Fields.Item("Code").Value;
-                                discSO.PrcntDisc = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("DiscPrcnt").Value));
-                                discSO.PrcntMinQty = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinQtyPrcnt").Value));
-                                discSO.BXGYItemCd = oRec.Fields.Item("ItemCodeBG").Value;
-                                discSO.BXGYMinQty = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinQtyBG").Value));
-                                discSO.BXGYItemBns = oRec.Fields.Item("ItemCodeFree").Value;
-                                discSO.BXGYQtyFree = Convert.ToDouble(Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("QtyFree").Value));
-                                discSO.Kelipatan = oRec.Fields.Item("Kelipatan").Value;
-                                listDiscSO.Add(discSO);
-                            }
-                        }
-
-                    }
-                    #endregion
-                }
-                #endregion
-
-                #region Apply Discount
-                for (int i = 1; i < oMtx.RowCount; i++)
-                {
-                    string itemCode = oMtx.Columns.Item("1").Cells.Item(i).Specific.Value;
-                    double qty = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("11").Cells.Item(i).Specific.Value);
-                    var dataDiscount = listDiscSO.Where(o => o.ItemCode == itemCode);
-
-                    double prdDisc = 0;
-                    double fixDisc = 0;
-
-                    #region FixDiscount
-                    if (dataDiscount.Count() > 0)
-                    {
-                        oMtx.Columns.Item("U_SOL_FDCD").Cells.Item(i).Specific.Value = dataDiscount.FirstOrDefault().FixDiscCode;
-                        oMtx.Columns.Item("U_SOL_FD").Cells.Item(i).Specific.Value = dataDiscount.FirstOrDefault().FixDisc;
-                        fixDisc = dataDiscount.FirstOrDefault().FixDisc;
-                    }
-                    #endregion
-
-                    #region Periodic Discount - Discount %
-                    if (dataDiscount.Count() > 0)
-                    {
-                        // by discount type
-                        if (dataDiscount.FirstOrDefault().DiscountType == "1")
-                        {
-                            // by customer type
-                            if (dataDiscount.FirstOrDefault().CustomerType == "All Customer" || (dataDiscount.FirstOrDefault().CustomerType == "Per Customer" && dataDiscount.FirstOrDefault().CustomerCode == cardCode))
-                            {
-                                oMtx.Columns.Item("U_SOL_PDCD").Cells.Item(i).Specific.Value = dataDiscount.FirstOrDefault().PrdDiscCode;
-                                oMtx.Columns.Item("U_SOL_PD").Cells.Item(i).Specific.Value = dataDiscount.FirstOrDefault().PrcntDisc;
-                                prdDisc = dataDiscount.FirstOrDefault().PrcntDisc;
-                            }
-                        }
-                    }
-                    #endregion
-
-                    #region All Row Discount
-                    double lineTotal = Utils.SBOToWindowsNumberWithCurrency(oMtx.Columns.Item("21").Cells.Item(i).Specific.Value);
-                    double calculate = 0;
-                    calculate = (lineTotal - (lineTotal * (fixDisc / 100))) - ((lineTotal - (lineTotal * (fixDisc / 100))) * (prdDisc / 100));
-
-                    oMtx.Columns.Item("21").Cells.Item(i).Specific.Value = calculate;
-                    oMtx.Columns.Item("U_SOL_ADDSC").Cells.Item(i).Specific.Value = Utils.WindowsToSBONumber((fixDisc + prdDisc) - ((fixDisc / 10) * (prdDisc / 10)));
-                    oMtx.Columns.Item("21").Cells.Item(i).Click();
-
-                    #endregion
-                }
-
-                #region Periodic Discount - Buy X get Y
-                var dataBonus = listDiscSO.Where(o => o.DiscountType == "2");
-
-                if (dataBonus.Count() > 0)
-                {
-                    foreach (var detail in dataBonus)
-                    {
-                        if (detail.CustomerType == "All Customer" || (detail.CustomerType == "Per Customer" && detail.CustomerCode == cardCode))
-                        {
-                            var groupItem = oMtxSO.Where(o => o.ItemCode == detail.ItemCode).FirstOrDefault();
-                            int currentRow = oMtx.RowCount;
-                            double qtyFree = detail.BXGYQtyFree;
-                            double minQty = detail.BXGYMinQty;
-
-                            oMtx.Columns.Item("1").Cells.Item(currentRow).Specific.Value = detail.BXGYItemBns;
-                            oMtx.Columns.Item("U_SOL_PDCD").Cells.Item(currentRow).Specific.Value = detail.PrdDiscCode;
-                            oMtx.Columns.Item("U_SOL_FLGBNS").Cells.Item(currentRow).Specific.Value = "Y";
-                            oMtx.Columns.Item("U_SOL_ADDSC").Cells.Item(currentRow).Specific.Value = 100;
-                            oMtx.Columns.Item("15").Cells.Item(currentRow).Specific.Value = 100; // discount
-
-                            if (detail.Kelipatan == "No")
-                                oMtx.Columns.Item("11").Cells.Item(currentRow).Specific.Value = qtyFree;
-                            else
-                                oMtx.Columns.Item("11").Cells.Item(currentRow).Specific.Value = Math.Round(qtyFree * (groupItem.Quantity / minQty), 0);
-                        }
-                    }
-                }
-                #endregion
-
-                #region One Time Discount
-                double discTotal = Utils.SBOToWindowsNumberWithoutCurrency(oForm.Items.Item("24").Specific.Value);
-                string currency = oForm.Items.Item("63").Specific.Value;
-                double price = Utils.SBOToWindowsNumberWithCurrency(oForm.Items.Item("22").Specific.Value);
-
-                if (discTotal == 0)
-                {
-                    string query = string.Empty;
-
-                    if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
-                        query = "CALL SOL_SP_ADDON_GET_CASHDISC ('" + cardCode + "', '" + currency + "', '" + price + "')";
-                    else
-                        query = "EXEC SOL_SP_ADDON_GET_CASHDISC @CUSTCODE = '" + cardCode + "', @CURR = '" + currency + "', @PRICE = '" + price + "'";
-
-                    oRec.DoQuery(query);
-                    if (oRec.RecordCount > 0)
-                    {
-                        oUdfForm.Items.Item("U_SOL_CASHDISC").Specific.Value = Convert.ToString(oRec.Fields.Item("U_SOL_CASHDISC").Value);
-                        oUdfForm.Items.Item("U_SOL_MEMO").Specific.Value = oRec.Fields.Item("Code").Value;
-                        oForm.Items.Item("24").Specific.Value = Convert.ToString(oRec.Fields.Item("U_SOL_CASHDISC").Value);
-                    }
-                }
-                #endregion
-
-                oUdfForm.Items.Item("U_SOL_APPLDISC").Specific.Value = "Y";
-                oUdfForm.Items.Item("U_SOL_MEMO").Click();
-
-                #endregion
             }
             catch (Exception ex)
             {
@@ -445,6 +230,295 @@ namespace SalesPromo
                 Utils.releaseObject(oRec);
             }
         }
+
+
+        /// <summary>
+        /// Grouping Item
+        /// </summary>
+        private void GroupingItem(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication,
+          ref Matrix oMtx, string cardCode, out List<MatrixSo> groupFixDisc, out List<MatrixSo> groupPrdDisc)
+        {
+            Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
+            groupFixDisc = new List<MatrixSo>();
+            groupPrdDisc = new List<MatrixSo>();
+
+            for (int i = 1; i < oMtx.RowCount; i++)
+            {
+                string itemCode = oMtx.Columns.Item("1").Cells.Item(i).Specific.Value;
+                double qty = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("11").Cells.Item(i).Specific.Value);
+                string address = oMtx.Columns.Item("275").Cells.Item(i).Specific.Value;
+                string area = GetAreaByCust(ref oSBOCompany, ref oSBOApplication, cardCode, address);
+                //double discount = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("15").Cells.Item(i).Specific.Value);
+                string detailStatus = oMtx.Columns.Item("40").Cells.Item(i).Specific.Value;
+                string itemBonus = oMtx.Columns.Item("U_SOL_FLGBNS").Cells.Item(i).Specific.Value;
+
+                #region Fix Disc
+
+                // check discount ALL area
+                string query = string.Empty;
+                if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
+                    query = "CALL SOL_SP_ADDON_GET_DISCAREA ('" + itemCode + "', '" + cardCode + "')";
+                else
+                    query = "EXEC SOL_SP_ADDON_GET_DISCAREA @ITEMCODE = '" + itemCode + "', @CUSTCODE = '" + cardCode + "'";
+
+                oRec.DoQuery(query);
+
+                MatrixSo mtxFixDisc = new MatrixSo();
+                if (oRec.RecordCount > 0 && groupFixDisc.Select(o => o.ItemCode).ToList().Contains(itemCode))
+                {
+                    groupFixDisc.Where(o => o.ItemCode == itemCode).ToList().ForEach(a => { a.Quantity += qty; a.Area = "ALL"; });
+                }
+                else if (oRec.RecordCount <= 0 && groupFixDisc.Where(o => o.ItemCode == itemCode && o.Area == area).Select(o => o.ItemCode).ToList().Contains(itemCode))
+                {
+                    groupFixDisc.Where(o => o.ItemCode == itemCode && o.Area == area).ToList().ForEach(a => { a.Quantity += qty; a.Area = area; });
+                }
+                else
+                {
+                    mtxFixDisc.ItemCode = itemCode;
+                    mtxFixDisc.Quantity = qty;
+                    mtxFixDisc.FlagBonus = itemBonus;
+                    mtxFixDisc.Area = area;
+
+                    groupFixDisc.Add(mtxFixDisc);
+                }
+
+                #endregion
+
+                #region Prd Disc
+                MatrixSo mtxPrdDisc = new MatrixSo();
+                if (groupPrdDisc.Select(o => o.ItemCode).ToList().Contains(itemCode))
+                {
+                    groupPrdDisc.Where(o => o.ItemCode == itemCode).ToList().ForEach(a => a.Quantity += qty);
+                }
+                else
+                {
+                    mtxPrdDisc.ItemCode = itemCode;
+                    mtxPrdDisc.Quantity = qty;
+                    mtxPrdDisc.Area = area;
+                    mtxPrdDisc.FlagBonus = itemBonus;
+
+                    groupPrdDisc.Add(mtxPrdDisc);
+                }
+                #endregion
+            }
+        }
+
+
+        /// <summary>
+        /// Get Discount
+        /// </summary>
+        private void GetDiscount(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication,
+            ref Matrix oMtx, string cardCode, string postingDate, out List<OutputDiscQuery> listDiscSO
+            , List<MatrixSo> groupFixDisc, List<MatrixSo> groupPrdDisc)
+        {
+            Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
+            listDiscSO = new List<OutputDiscQuery>();
+
+            #region Fix Discount
+            foreach (var detailFix in groupFixDisc)
+            {
+                OutputDiscQuery discSO = new OutputDiscQuery();
+
+                if (detailFix.FlagBonus != "Y")
+                {
+                    string query = string.Empty;
+
+                    if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
+                        query = "CALL SOL_SP_ADDON_GET_FIXDISC ('" + detailFix.ItemCode + "', '" + cardCode + "', '" + detailFix.Area + "')";
+                    else
+                        query = "EXEC SOL_SP_ADDON_GET_FIXDISC @ITEMCODE = '" + detailFix.ItemCode + "', @CUSTCODE = '" + cardCode + "', @AREA = '" + detailFix.Area + "'";
+
+                    oRec.DoQuery(query);
+                    if (oRec.RecordCount > 0)
+                    {
+                        discSO.ItemCode = detailFix.ItemCode;
+                        discSO.FixDiscCode = oRec.Fields.Item("Code").Value;
+                        discSO.FixDisc = Convert.ToDouble(Utils.FormattedStringAmount(oRec.Fields.Item("Disc").Value));
+                        discSO.Area = detailFix.Area;
+                        listDiscSO.Add(discSO);
+                    }
+                }
+            }
+            #endregion
+
+            #region Periodic Discount
+            foreach (var detailPrd in groupPrdDisc)
+            {
+                OutputDiscQuery discSO = new OutputDiscQuery();
+
+                if (detailPrd.FlagBonus != "Y")
+                {
+                    string query = string.Empty;
+
+                    if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
+                        query = "CALL SOL_SP_ADDON_GET_PRDDISC ('" + detailPrd.ItemCode + "', '" + cardCode + "', '" + postingDate + "', '" + detailPrd.Quantity + "')";
+                    else
+                        query = "EXEC SOL_SP_ADDON_GET_PRDDISC @ITEMCODE = '" + detailPrd.ItemCode + "', @CUSTCODE = '" + cardCode + "', @POSTINGDT = '" + postingDate + "', @QTY = '" + detailPrd.Quantity + "'";
+
+                    oRec.DoQuery(query);
+                    if (oRec.RecordCount > 0)
+                    {
+                        if (listDiscSO.Select(o => o.ItemCode).ToList().Contains(detailPrd.ItemCode))
+                        {
+                            listDiscSO.Where(o => o.ItemCode == detailPrd.ItemCode).ToList()
+                                .ForEach(a =>
+                                {
+                                    a.DiscountType = oRec.Fields.Item("DiscType").Value;
+                                    a.CustomerType = oRec.Fields.Item("CustType").Value;
+                                    a.CustomerCode = oRec.Fields.Item("CustCode").Value;
+                                    a.PrdDiscCode = oRec.Fields.Item("Code").Value;
+                                    a.PrcntDisc = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("DiscPrcnt").Value);
+                                    a.PrcntMinQty = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinQtyPrcnt").Value);
+                                    a.BXGYItemCd = oRec.Fields.Item("ItemCodeBG").Value;
+                                    a.BXGYMinQty = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinQtyBG").Value);
+                                    a.BXGYItemBns = oRec.Fields.Item("ItemCodeFree").Value;
+                                    a.BXGYQtyFree = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("QtyFree").Value);
+                                    a.Kelipatan = oRec.Fields.Item("Kelipatan").Value;
+                                });
+                        }
+                        else
+                        {
+                            discSO.ItemCode = oRec.Fields.Item("ItemCodePrcnt").Value;
+                            discSO.DiscountType = oRec.Fields.Item("DiscType").Value;
+                            discSO.CustomerType = oRec.Fields.Item("CustType").Value;
+                            discSO.CustomerCode = oRec.Fields.Item("CustCode").Value;
+                            discSO.PrdDiscCode = oRec.Fields.Item("Code").Value;
+                            discSO.PrcntDisc = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("DiscPrcnt").Value);
+                            discSO.PrcntMinQty = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinQtyPrcnt").Value);
+                            discSO.BXGYItemCd = oRec.Fields.Item("ItemCodeBG").Value;
+                            discSO.BXGYMinQty = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinQtyBG").Value);
+                            discSO.BXGYItemBns = oRec.Fields.Item("ItemCodeFree").Value;
+                            discSO.BXGYQtyFree = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("QtyFree").Value);
+                            discSO.Kelipatan = oRec.Fields.Item("Kelipatan").Value;
+                            listDiscSO.Add(discSO);
+                        }
+                    }
+                }
+            }
+            #endregion
+        }
+
+
+        /// <summary>
+        /// Apply Discount
+        /// </summary>
+        private void ApplyDiscount(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication,
+            ref Matrix oMtx, Form oForm, Form oUdfForm, string cardCode, List<OutputDiscQuery> listDiscSO
+            , List<MatrixSo> groupFixDisc, List<MatrixSo> groupPrdDisc)
+        {
+            Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
+
+            for (int i = 1; i < oMtx.RowCount; i++)
+            {
+                string itemCode = oMtx.Columns.Item("1").Cells.Item(i).Specific.Value;
+                double qty = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("11").Cells.Item(i).Specific.Value);
+                string address = oMtx.Columns.Item("275").Cells.Item(i).Specific.Value;
+                string area = GetAreaByCust(ref oSBOCompany, ref oSBOApplication, cardCode, address);
+
+                var dataDiscount = listDiscSO.Where(o => o.ItemCode == itemCode);
+
+                double prdDisc = 0;
+                double fixDisc = 0;
+
+                #region FixDiscount
+                if (dataDiscount.Count() > 0 && (dataDiscount.FirstOrDefault().Area == area || dataDiscount.FirstOrDefault().Area == "ALL"))
+                {
+                    oMtx.Columns.Item("U_SOL_FDCD").Cells.Item(i).Specific.Value = dataDiscount.FirstOrDefault().FixDiscCode;
+                    oMtx.Columns.Item("U_SOL_FD").Cells.Item(i).Specific.Value = Utils.WindowsToSBONumber(dataDiscount.FirstOrDefault().FixDisc);
+                    fixDisc = dataDiscount.FirstOrDefault().FixDisc;
+                }
+                #endregion
+
+                #region Periodic Discount - Discount %
+                if (dataDiscount.Count() > 0)
+                {
+                    // by discount type
+                    if (dataDiscount.FirstOrDefault().DiscountType == "1")
+                    {
+                        // by customer type
+                        if (dataDiscount.FirstOrDefault().CustomerType == "All Customer" || (dataDiscount.FirstOrDefault().CustomerType == "Per Customer" && dataDiscount.FirstOrDefault().CustomerCode == cardCode))
+                        {
+                            oMtx.Columns.Item("U_SOL_PDCD").Cells.Item(i).Specific.Value = dataDiscount.FirstOrDefault().PrdDiscCode;
+                            oMtx.Columns.Item("U_SOL_PD").Cells.Item(i).Specific.Value = Utils.WindowsToSBONumber(dataDiscount.FirstOrDefault().PrcntDisc);
+                            prdDisc = dataDiscount.FirstOrDefault().PrcntDisc;
+                        }
+                    }
+                }
+                #endregion
+
+                #region All Row Discount
+                double lineTotal = Utils.SBOToWindowsNumberWithCurrency(oMtx.Columns.Item("21").Cells.Item(i).Specific.Value);
+                double calculate = 0;
+                calculate = (lineTotal - (lineTotal * (fixDisc / 100))) - ((lineTotal - (lineTotal * (fixDisc / 100))) * (prdDisc / 100));
+
+                oMtx.Columns.Item("21").Cells.Item(i).Specific.Value = Utils.WindowsToSBONumber(calculate);
+                oMtx.Columns.Item("U_SOL_ADDSC").Cells.Item(i).Specific.Value = Utils.WindowsToSBONumber((fixDisc + prdDisc) - ((fixDisc / 10) * (prdDisc / 10)));
+                oMtx.Columns.Item("21").Cells.Item(i).Click();
+
+                #endregion
+            }
+
+            #region Periodic Discount - Buy X get Y
+            var dataBonus = listDiscSO.Where(o => o.DiscountType == "2");
+
+            if (dataBonus.Count() > 0)
+            {
+                foreach (var detail in dataBonus)
+                {
+                    if (detail.CustomerType == "All Customer" || (detail.CustomerType == "Per Customer" && detail.CustomerCode == cardCode))
+                    {
+                        var groupItem = groupPrdDisc.Where(o => o.ItemCode == detail.ItemCode).FirstOrDefault();
+                        int currentRow = oMtx.RowCount;
+                        double qtyFree = detail.BXGYQtyFree;
+                        double minQty = detail.BXGYMinQty;
+
+                        oMtx.Columns.Item("1").Cells.Item(currentRow).Specific.Value = detail.BXGYItemBns;
+                        oMtx.Columns.Item("U_SOL_PDCD").Cells.Item(currentRow).Specific.Value = detail.PrdDiscCode;
+                        oMtx.Columns.Item("U_SOL_FLGBNS").Cells.Item(currentRow).Specific.Value = "Y";
+                        oMtx.Columns.Item("U_SOL_ADDSC").Cells.Item(currentRow).Specific.Value = 100;
+                        oMtx.Columns.Item("15").Cells.Item(currentRow).Specific.Value = 100; // discount
+
+                        if (detail.Kelipatan == "No")
+                            oMtx.Columns.Item("11").Cells.Item(currentRow).Specific.Value = qtyFree;
+                        else
+                        {
+                            string jmlKelipatan = (qtyFree * (groupItem.Quantity / minQty)).ToString() ;
+                            oMtx.Columns.Item("11").Cells.Item(currentRow).Specific.Value = jmlKelipatan.Substring(0, jmlKelipatan.IndexOf(","));
+                        }
+                    }
+                }
+            }
+            #endregion
+
+            #region One Time Discount
+            double discTotal = Utils.SBOToWindowsNumberWithoutCurrency(oForm.Items.Item("24").Specific.Value);
+            string currency = oForm.Items.Item("63").Specific.Value;
+            double priceA = Utils.SBOToWindowsNumberWithCurrency(oForm.Items.Item("22").Specific.Value);
+            string price = priceA.ToString().Replace(",", ".");
+
+            if (discTotal == 0)
+            {
+                string query = string.Empty;
+
+                if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
+                    query = "CALL SOL_SP_ADDON_GET_CASHDISC ('" + cardCode + "', '" + currency + "', '" + price + "')";
+                else
+                    query = "EXEC SOL_SP_ADDON_GET_CASHDISC @CUSTCODE = '" + cardCode + "', @CURR = '" + currency + "', @PRICE = " + price + "";
+
+                oRec.DoQuery(query);
+                if (oRec.RecordCount > 0)
+                {
+                    oUdfForm.Items.Item("U_SOL_CASHDISC").Specific.Value = Convert.ToString(oRec.Fields.Item("U_SOL_CASHDISC").Value);
+                    oUdfForm.Items.Item("U_SOL_MEMO").Specific.Value = oRec.Fields.Item("Code").Value;
+                    oForm.Items.Item("24").Specific.Value = Convert.ToString(oRec.Fields.Item("U_SOL_CASHDISC").Value);
+                }
+            }
+            #endregion
+
+            oUdfForm.Items.Item("U_SOL_APPLDISC").Specific.Value = "Y";
+            oUdfForm.Items.Item("U_SOL_MEMO").Click();
+        }
+
 
         /// <summary>
         /// Get Area(county) by Customer code and address code

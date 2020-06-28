@@ -110,12 +110,14 @@ namespace SalesPromo
     {
         public string ItemCode;
         public double Quantity;
-        //public double Row;
+        public string Area;
+        public string AreaType;
         public double SapDisc;
         public string Address;
         public string FlagBonus;
 
     }
+
 
     public class OutputDiscQuery
     {
@@ -123,7 +125,8 @@ namespace SalesPromo
         public string CustomerType;
         public string CustomerCode;
         public string ItemCode;
-        
+        public string Area;
+
         public string FixDiscCode;
         public double FixDisc;
 
