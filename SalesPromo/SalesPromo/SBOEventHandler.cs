@@ -141,7 +141,7 @@ namespace SalesPromo
             OneTimeDiscount cashDisc = new OneTimeDiscount();
             PeriodicDiscount prdDisc = new PeriodicDiscount();
             FixDiscount fixDisc = new FixDiscount();
-            SalesOrder salesOrder = new SalesOrder();
+            SalesOrder salesOrder = new SalesOrder(oSBOApplication, oSBOCompany);
 
             try
             {
@@ -154,7 +154,7 @@ namespace SalesPromo
                     else if (pVal.FormTypeEx == "FIXDISC")
                         fixDisc.ItemEvent_PrdDisc(ref oSBOCompany, ref oSBOApplication, FormUID, ref pVal, ref bubbleEvent);
                     else if (pVal.FormType == 139)
-                        salesOrder.ItemEvents_SalesOrder(ref oSBOCompany, ref oSBOApplication, FormUID, ref pVal, ref bubbleEvent);
+                        salesOrder.ItemEvents_SalesOrder(FormUID, ref pVal, ref bubbleEvent);
                 }
             }
             catch (Exception ex)

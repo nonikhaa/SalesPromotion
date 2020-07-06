@@ -10,8 +10,16 @@ namespace SalesPromo
 {
     public class SalesOrder
     {
-        public void ItemEvents_SalesOrder(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication,
-                                            string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
+        private SAPbouiCOM.Application oSBOApplication;
+        private SAPbobsCOM.Company oSBOCompany;
+
+        public SalesOrder(SAPbouiCOM.Application oSBOApplication, SAPbobsCOM.Company oSBOCompany)
+        {
+            this.oSBOApplication = oSBOApplication;
+            this.oSBOCompany = oSBOCompany;
+        }
+
+        public void ItemEvents_SalesOrder(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
         {
             #region Add Layout
             if (bubbleEvent)
@@ -64,6 +72,7 @@ namespace SalesPromo
                         Form oForm = oSBOApplication.Forms.Item(formUID);
                         Form oUdfForm = oSBOApplication.Forms.Item(oForm.UDFFormUID);
                         Matrix oMtx = oForm.Items.Item("38").Specific;
+                        string docNum = oForm.Items.Item("8").Specific.Value;
                         Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
 
                         try
@@ -73,13 +82,26 @@ namespace SalesPromo
                             GeneralVariables.oSOCurrent.CardCode = oForm.Items.Item("4").Specific.Value;
                             GeneralVariables.oSOCurrent.PostingDate = oForm.Items.Item("10").Specific.Value;
 
-                            if (pVal.FormMode == (int)BoFormMode.fm_ADD_MODE)
+                            if (AllowedCalculate(GeneralVariables.oSOCurrent.CardCode))
                             {
-                                oForm.Freeze(true);
+                                if (!AlreadyDeliv(docNum))
+                                {
+                                    if (pVal.FormMode == (int)BoFormMode.fm_ADD_MODE || pVal.FormMode == (int)BoFormMode.fm_UPDATE_MODE)
+                                    {
+                                        oForm.Freeze(true);
 
-                                ActiveRowUdf(true, ref oMtx, ref oUdfForm);
-                                CalculateDiscount(ref oSBOCompany, ref oSBOApplication, oForm.UniqueID
-                                                   , GeneralVariables.oSOCurrent.CardCode, GeneralVariables.oSOCurrent.PostingDate);
+                                        ActiveRowUdf(true, ref oMtx, ref oUdfForm);
+                                        CalculateDiscount(oForm.UniqueID, GeneralVariables.oSOCurrent.CardCode, GeneralVariables.oSOCurrent.PostingDate);
+                                    }
+                                }
+                                else
+                                {
+                                    oSBOApplication.MessageBox("You cannot Calculate Discount if one item or more has been delivered or closed.");
+                                }
+                            }
+                            else
+                            {
+                                oSBOApplication.MessageBox("User group is not allowed to Calculate Discount.");
                             }
                         }
                         catch (Exception ex)
@@ -190,12 +212,12 @@ namespace SalesPromo
         /// <summary>
         /// Calculate discount
         /// </summary>
-        private void CalculateDiscount(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication
-                                        , string uniqueID, string cardCode, string postingDate)
+        private void CalculateDiscount(string uniqueID, string cardCode, string postingDate)
         {
             Form oForm = oSBOApplication.Forms.Item(uniqueID);
             Form oUdfForm = oSBOApplication.Forms.Item(oForm.UDFFormUID);
             Matrix oMtx = oForm.Items.Item("38").Specific;
+
             Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
 
             ClearPromo(ref oMtx, ref oForm, ref oUdfForm);
@@ -204,17 +226,15 @@ namespace SalesPromo
             oProgressBar.Text = "Calculate Discount...";
             oForm.PaneLevel = 1;
 
-            //if(oUdfForm.Items.Item("SOL_TIPE_SO"))
             try
             {
                 List<MatrixSo> GroupFixDisc = null;
                 List<MatrixSo> GroupPrdDisc = null;
                 List<OutputDiscQuery> listDiscSO = new List<OutputDiscQuery>();
 
-                GroupingItem(ref oSBOCompany, ref oSBOApplication, ref oMtx, cardCode, out GroupFixDisc, out GroupPrdDisc);
-                GetDiscount(ref oSBOCompany, ref oSBOApplication, ref oMtx, cardCode, postingDate, out listDiscSO, GroupFixDisc, GroupPrdDisc);
-                ApplyDiscount(ref oSBOCompany, ref oSBOApplication, ref oMtx, oForm, oUdfForm, cardCode, listDiscSO, GroupFixDisc, GroupPrdDisc);
-
+                GroupingItem(ref oMtx, cardCode, out GroupFixDisc, out GroupPrdDisc);
+                GetDiscount(ref oMtx, cardCode, postingDate, out listDiscSO, GroupFixDisc, GroupPrdDisc);
+                ApplyDiscount(ref oMtx, oForm, oUdfForm, cardCode, listDiscSO, GroupFixDisc, GroupPrdDisc);
             }
             catch (Exception ex)
             {
@@ -231,12 +251,10 @@ namespace SalesPromo
             }
         }
 
-
         /// <summary>
         /// Grouping Item
         /// </summary>
-        private void GroupingItem(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication,
-          ref Matrix oMtx, string cardCode, out List<MatrixSo> groupFixDisc, out List<MatrixSo> groupPrdDisc)
+        private void GroupingItem(ref Matrix oMtx, string cardCode, out List<MatrixSo> groupFixDisc, out List<MatrixSo> groupPrdDisc)
         {
             Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
             groupFixDisc = new List<MatrixSo>();
@@ -247,7 +265,7 @@ namespace SalesPromo
                 string itemCode = oMtx.Columns.Item("1").Cells.Item(i).Specific.Value;
                 double qty = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("11").Cells.Item(i).Specific.Value);
                 string address = oMtx.Columns.Item("275").Cells.Item(i).Specific.Value;
-                string area = GetAreaByCust(ref oSBOCompany, ref oSBOApplication, cardCode, address);
+                string area = GetAreaByCust(cardCode, address);
                 //double discount = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("15").Cells.Item(i).Specific.Value);
                 string detailStatus = oMtx.Columns.Item("40").Cells.Item(i).Specific.Value;
                 string itemBonus = oMtx.Columns.Item("U_SOL_FLGBNS").Cells.Item(i).Specific.Value;
@@ -307,8 +325,7 @@ namespace SalesPromo
         /// <summary>
         /// Get Discount
         /// </summary>
-        private void GetDiscount(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication,
-            ref Matrix oMtx, string cardCode, string postingDate, out List<OutputDiscQuery> listDiscSO
+        private void GetDiscount(ref Matrix oMtx, string cardCode, string postingDate, out List<OutputDiscQuery> listDiscSO
             , List<MatrixSo> groupFixDisc, List<MatrixSo> groupPrdDisc)
         {
             Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
@@ -402,8 +419,7 @@ namespace SalesPromo
         /// <summary>
         /// Apply Discount
         /// </summary>
-        private void ApplyDiscount(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication,
-            ref Matrix oMtx, Form oForm, Form oUdfForm, string cardCode, List<OutputDiscQuery> listDiscSO
+        private void ApplyDiscount(ref Matrix oMtx, Form oForm, Form oUdfForm, string cardCode, List<OutputDiscQuery> listDiscSO
             , List<MatrixSo> groupFixDisc, List<MatrixSo> groupPrdDisc)
         {
             Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
@@ -413,7 +429,7 @@ namespace SalesPromo
                 string itemCode = oMtx.Columns.Item("1").Cells.Item(i).Specific.Value;
                 double qty = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("11").Cells.Item(i).Specific.Value);
                 string address = oMtx.Columns.Item("275").Cells.Item(i).Specific.Value;
-                string area = GetAreaByCust(ref oSBOCompany, ref oSBOApplication, cardCode, address);
+                string area = GetAreaByCust(cardCode, address);
 
                 var dataDiscount = listDiscSO.Where(o => o.ItemCode == itemCode);
 
@@ -482,8 +498,11 @@ namespace SalesPromo
                             oMtx.Columns.Item("11").Cells.Item(currentRow).Specific.Value = qtyFree;
                         else
                         {
-                            string jmlKelipatan = (qtyFree * (groupItem.Quantity / minQty)).ToString() ;
-                            oMtx.Columns.Item("11").Cells.Item(currentRow).Specific.Value = jmlKelipatan.Substring(0, jmlKelipatan.IndexOf(","));
+                            string jmlKelipatan = (qtyFree * (groupItem.Quantity / minQty)).ToString();
+                            if (jmlKelipatan.IndexOf(',') > 0)
+                                oMtx.Columns.Item("11").Cells.Item(currentRow).Specific.Value = jmlKelipatan.Substring(0, jmlKelipatan.IndexOf(","));
+                            else
+                                oMtx.Columns.Item("11").Cells.Item(currentRow).Specific.Value = jmlKelipatan;
                         }
                     }
                 }
@@ -523,8 +542,7 @@ namespace SalesPromo
         /// <summary>
         /// Get Area(county) by Customer code and address code
         /// </summary>
-        private string GetAreaByCust(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication,
-                                        string cardCode, string address)
+        private string GetAreaByCust(string cardCode, string address)
         {
             Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
             string area = string.Empty;
@@ -594,6 +612,52 @@ namespace SalesPromo
                     oForm.Items.Item("24").Specific.Value = 0; // discount header
                 }
             }
+        }
+
+        /// <summary>
+        /// Check user group allowed for calculate or not
+        /// </summary>
+        private bool AllowedCalculate(string cardCode)
+        {
+            bool calculate = false;
+
+            Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
+            string query = " SELECT OCRG.\"U_SOL_CALC_DISC\" FROM OCRD "
+                            + "INNER JOIN OCRG ON OCRD.\"GroupCode\" = OCRG.\"GroupCode\" "
+                            + "WHERE OCRD.\"CardCode\" = '" + cardCode + "'";
+            oRec.DoQuery(query);
+
+            if (oRec.RecordCount > 0)
+            {
+                string check = oRec.Fields.Item("U_SOL_CALC_DISC").Value;
+                if (check == "Y") { calculate = true; }
+            }
+
+            Utils.releaseObject(oRec);
+            return calculate;
+        }
+
+        /// <summary>
+        /// Check sales order already delivered or not
+        /// </summary>
+        private bool AlreadyDeliv(string docNum)
+        {
+            bool delivered = false;
+
+            Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
+            string query = "SELECT DISTINCT 'TRUE' FROM ORDR "
+                            + "LEFT JOIN RDR1 ON RDR1.\"DocEntry\" = ORDR.\"DocEntry\" "
+                            + "WHERE ORDR.\"DocNum\" = " + docNum + " AND ORDR.\"CANCELED\" = 'N'"
+                            + "AND (RDR1.\"LineStatus\" = 'C' OR RDR1.\"Quantity\" <> RDR1.\"OpenQty\")";
+            oRec.DoQuery(query);
+
+            if (oRec.RecordCount > 0)
+            {
+                delivered = true;
+            }
+
+            Utils.releaseObject(oRec);
+            return delivered;
         }
     }
 }
