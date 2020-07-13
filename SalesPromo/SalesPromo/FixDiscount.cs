@@ -10,13 +10,21 @@ namespace SalesPromo
 {
     public class FixDiscount
     {
+        private SAPbouiCOM.Application oSBOApplication;
+        private SAPbobsCOM.Company oSBOCompany;
+
+        public FixDiscount(SAPbouiCOM.Application oSBOApplication, SAPbobsCOM.Company oSBOCompany)
+        {
+            this.oSBOApplication = oSBOApplication;
+            this.oSBOCompany = oSBOCompany;
+        }
+
         #region Menu Event
         /// <summary>
         /// Menu Event Fix Discount
         /// When click menu, this event called
         /// </summary>
-        public void MenuEvent_FixDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication
-                                       , ref MenuEvent pVal, out bool bubbleEvent)
+        public void MenuEvent_FixDisc(ref MenuEvent pVal, out bool bubbleEvent)
         {
             bubbleEvent = true;
 
@@ -28,7 +36,7 @@ namespace SalesPromo
                 {
                     oForm = Utils.createForm(ref oSBOApplication, "FixDisc");
                     oForm.Visible = true;
-                    Template_Add_FixDisc(ref oSBOCompany, ref oSBOApplication, ref oForm);
+                    Template_Add_FixDisc(ref oForm);
                 }
                 catch (Exception ex)
                 {
@@ -55,7 +63,7 @@ namespace SalesPromo
         /// <summary>
         /// Template Fix Discount When Load
         /// </summary>
-        public void Template_Add_FixDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, ref Form oForm)
+        public void Template_Add_FixDisc(ref Form oForm)
         {
             try
             {
@@ -118,7 +126,7 @@ namespace SalesPromo
         /// <summary>
         /// Add row in Fix Discount
         /// </summary>
-        public void MenuEvent_FixDiscAdd(ref Application oSBOApplication, ref MenuEvent pVal, ref bool bubbleEvent)
+        public void MenuEvent_FixDiscAdd(ref MenuEvent pVal, ref bool bubbleEvent)
         {
             if (pVal.BeforeAction == true)
             {
@@ -189,7 +197,7 @@ namespace SalesPromo
         /// <summary>
         /// Delete row in Fix Discount
         /// </summary>
-        public void MenuEvent_FixDiscDel(ref Application oSBOApplication, ref MenuEvent pVal, ref bool bubbleEvent)
+        public void MenuEvent_FixDiscDel(ref MenuEvent pVal, ref bool bubbleEvent)
         {
             if (pVal.BeforeAction == true)
             {
@@ -257,22 +265,20 @@ namespace SalesPromo
         /// <summary>
         /// Item Event Fix Discount
         /// </summary>
-        public void ItemEvent_PrdDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication,
-                                        string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
+        public void ItemEvent_PrdDisc(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
         {
             switch (pVal.EventType)
             {
                 case BoEventTypes.et_FORM_LOAD:; break;
-                case BoEventTypes.et_CHOOSE_FROM_LIST: CFL_FixDisc(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
-                case BoEventTypes.et_VALIDATE: Validate_FixDisc(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
+                case BoEventTypes.et_CHOOSE_FROM_LIST: CFL_FixDisc(formUID, ref pVal, ref bubbleEvent); break;
+                case BoEventTypes.et_VALIDATE: Validate_FixDisc(formUID, ref pVal, ref bubbleEvent); break;
             }
         }
 
         /// <summary>
         /// Choose From List
         /// </summary>
-        private void CFL_FixDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void CFL_FixDisc(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
             IChooseFromListEvent oCFLEvent = null;
             try
@@ -281,7 +287,7 @@ namespace SalesPromo
 
                 switch (pVal.ItemUID)
                 {
-                    case "tCustCd": CFL_FixDisc_CustCode(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent, ref oCFLEvent); break;
+                    case "tCustCd": CFL_FixDisc_CustCode(formUID, ref pVal, ref bubbleEvent, ref oCFLEvent); break;
                 }
             }
             catch (Exception ex)
@@ -297,8 +303,7 @@ namespace SalesPromo
         /// <summary>
         /// CFL Customer Code
         /// </summary>
-        private void CFL_FixDisc_CustCode(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent, ref IChooseFromListEvent oCFLEvent)
+        private void CFL_FixDisc_CustCode(string formUID, ref ItemEvent pVal,ref bool bubbleEvent, ref IChooseFromListEvent oCFLEvent)
         {
             if (bubbleEvent)
             {
@@ -351,7 +356,7 @@ namespace SalesPromo
                             oDBSource_H.SetValue("U_SOL_CARDNAME", 0, oBp.CardName);
 
                             // Generate Code
-                            string code = GenerateCode(ref oSBOCompany, ref oSBOApplication, oBp.CardCode);
+                            string code = GenerateCode(oBp.CardCode);
                             oDBSource_H.SetValue("Code", 0, code);
 
                             if (oForm.Mode != BoFormMode.fm_ADD_MODE)
@@ -385,7 +390,7 @@ namespace SalesPromo
         /// Create menu when Rihgt Click Event
         /// menu Add Row and Delete Row
         /// </summary>
-        public void RightClickEvent_FixDisc(ref Application oSBOApplication, ref ContextMenuInfo eventInfo, ref bool bubbleEvent)
+        public void RightClickEvent_FixDisc(ref ContextMenuInfo eventInfo, ref bool bubbleEvent)
         {
             Form oForm = oSBOApplication.Forms.ActiveForm;
 
@@ -447,13 +452,12 @@ namespace SalesPromo
         /// <summary>
         /// Validate Event
         /// </summary>
-        private void Validate_FixDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void Validate_FixDisc(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
             switch (pVal.ColUID)
             {
-                case "cBrCd": Validate_FixDisc_BrandCode(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
-                case "cItmCd": Validate_FixDisc_ItemCode(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
+                case "cBrCd": Validate_FixDisc_BrandCode(formUID, ref pVal, ref bubbleEvent); break;
+                case "cItmCd": Validate_FixDisc_ItemCode(formUID, ref pVal, ref bubbleEvent); break;
             }
         }
 
@@ -461,8 +465,7 @@ namespace SalesPromo
         /// Validate - Brand Code
         /// Ketika Brand Code Dipilih, Brand Name terisi otomatis
         /// </summary>
-        private void Validate_FixDisc_BrandCode(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void Validate_FixDisc_BrandCode(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
             if (bubbleEvent)
             {
@@ -523,8 +526,7 @@ namespace SalesPromo
         /// Validate - Item Code
         /// Ketika Item Code Dipilih, Item Name terisi otomatis
         /// </summary>
-        private void Validate_FixDisc_ItemCode(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void Validate_FixDisc_ItemCode( string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
             if (bubbleEvent)
             {
@@ -583,8 +585,7 @@ namespace SalesPromo
         /// <summary>
         /// Generate Code Fix Discount Master Data
         /// </summary>
-        private string GenerateCode(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication,
-                                    string custCode)
+        private string GenerateCode(string custCode)
         {
             string runNumber = string.Empty;
             Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);

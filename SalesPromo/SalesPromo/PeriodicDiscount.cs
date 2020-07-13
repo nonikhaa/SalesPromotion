@@ -10,14 +10,21 @@ namespace SalesPromo
 {
     public class PeriodicDiscount
     {
+        private SAPbouiCOM.Application oSBOApplication;
+        private SAPbobsCOM.Company oSBOCompany;
+
+        public PeriodicDiscount(SAPbouiCOM.Application oSBOApplication, SAPbobsCOM.Company oSBOCompany)
+        {
+            this.oSBOApplication = oSBOApplication;
+            this.oSBOCompany = oSBOCompany;
+        }
 
         #region Menu Event
         /// <summary>
         /// Menu Event Periodic Discount
         /// When click menu, this event called
         /// </summary>
-        public void MenuEvent_PrdDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication
-                                       , ref MenuEvent pVal, out bool bubbleEvent)
+        public void MenuEvent_PrdDisc(ref MenuEvent pVal, out bool bubbleEvent)
         {
             bubbleEvent = true;
 
@@ -29,7 +36,7 @@ namespace SalesPromo
                 {
                     oForm = Utils.createForm(ref oSBOApplication, "PrdDisc");
                     oForm.Visible = true;
-                    Template_Add_PrdDisc(ref oSBOCompany, ref oSBOApplication, ref oForm);
+                    Template_Add_PrdDisc(ref oForm);
                 }
                 catch (Exception ex)
                 {
@@ -56,7 +63,7 @@ namespace SalesPromo
         /// <summary>
         /// Template Periodic Discount When Load
         /// </summary>
-        public void Template_Add_PrdDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, ref Form oForm)
+        public void Template_Add_PrdDisc(ref Form oForm)
         {
             try
             {
@@ -72,7 +79,7 @@ namespace SalesPromo
                 oForm.Items.Item("tab1").Click();
 
                 // Generate Code
-                string runCode = GenerateCode(ref oSBOCompany, ref oSBOApplication);
+                string runCode = GenerateCode();
                 dtSource.SetValue("Code", 0, runCode);
                 dtSource.SetValue("U_SOL_CUSTTYPE", 0, "All Customer");
                 oForm.Items.Item("mt_1").Enabled = false;
@@ -94,7 +101,7 @@ namespace SalesPromo
         /// <summary>
         /// Saat button next, previous, last record, first record di click
         /// </summary>
-        public void NextPrev_PrdDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, ref Form oForm)
+        public void NextPrev_PrdDisc(ref Form oForm)
         {
             try
             {
@@ -162,7 +169,7 @@ namespace SalesPromo
         /// <summary>
         /// Add row in Periodic Discount
         /// </summary>
-        public void MenuEvent_PrdDiscAdd(ref Application oSBOApplication, ref MenuEvent pVal, ref bool bubbleEvent)
+        public void MenuEvent_PrdDiscAdd(ref MenuEvent pVal, ref bool bubbleEvent)
         {
             if (pVal.BeforeAction == true)
             {
@@ -244,7 +251,7 @@ namespace SalesPromo
         /// <summary>
         /// Delete row in Periodic Discount
         /// </summary>
-        public void MenuEvent_PrdDiscDel(ref Application oSBOApplication, ref MenuEvent pVal, ref bool bubbleEvent)
+        public void MenuEvent_PrdDiscDel(ref MenuEvent pVal, ref bool bubbleEvent)
         {
             if (pVal.BeforeAction == true)
             {
@@ -310,7 +317,7 @@ namespace SalesPromo
         /// <summary>
         /// Generate Code
         /// </summary>
-        private string GenerateCode(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication)
+        private string GenerateCode()
         {
             string runNumber = string.Empty;
             Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
@@ -346,7 +353,7 @@ namespace SalesPromo
         /// Create menu when Rihgt Click Event
         /// menu Add Row and Delete Row
         /// </summary>
-        public void RightClickEvent_PrdDisc(ref Application oSBOApplication, ref ContextMenuInfo eventInfo, ref bool bubbleEvent)
+        public void RightClickEvent_PrdDisc(ref ContextMenuInfo eventInfo, ref bool bubbleEvent)
         {
             Form oForm = oSBOApplication.Forms.ActiveForm;
 
@@ -408,22 +415,20 @@ namespace SalesPromo
         /// <summary>
         /// Item Event Periodic Discount
         /// </summary>
-        public void ItemEvent_PrdDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication,
-                                        string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
+        public void ItemEvent_PrdDisc(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
         {
             switch (pVal.EventType)
             {
                 case BoEventTypes.et_FORM_LOAD:; break;
-                case BoEventTypes.et_CHOOSE_FROM_LIST: CFL_PrdDisc(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
-                case BoEventTypes.et_VALIDATE: Validate_PrdDisc(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
-                case BoEventTypes.et_COMBO_SELECT: Combo_PrdDisc(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
+                case BoEventTypes.et_CHOOSE_FROM_LIST: CFL_PrdDisc(formUID, ref pVal, ref bubbleEvent); break;
+                case BoEventTypes.et_VALIDATE: Validate_PrdDisc(formUID, ref pVal, ref bubbleEvent); break;
+                case BoEventTypes.et_COMBO_SELECT: Combo_PrdDisc(formUID, ref pVal, ref bubbleEvent); break;
             }
         }
         /// <summary>
         /// Choose From List
         /// </summary>
-        private void CFL_PrdDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void CFL_PrdDisc(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
         {
             IChooseFromListEvent oCFLEvent = null;
             try
@@ -432,7 +437,7 @@ namespace SalesPromo
 
                 switch (pVal.ItemUID)
                 {
-                    case "tGrpCd": CFL_PrdDisc_CustGrp(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent, ref oCFLEvent); break;
+                    case "tGrpCd": CFL_PrdDisc_CustGrp(formUID, ref pVal, ref bubbleEvent, ref oCFLEvent); break;
                 }
             }
             catch (Exception ex)
@@ -448,7 +453,7 @@ namespace SalesPromo
         /// <summary>
         /// CFL Customer group
         /// </summary>
-        private void CFL_PrdDisc_CustGrp(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
+        private void CFL_PrdDisc_CustGrp(string formUID, ref ItemEvent pVal,
                                         ref bool bubbleEvent, ref IChooseFromListEvent oCFLEvent)
         {
             if (bubbleEvent)
@@ -526,26 +531,24 @@ namespace SalesPromo
         /// <summary>
         /// Validate Event
         /// </summary>
-        private void Validate_PrdDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void Validate_PrdDisc(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
             switch (pVal.ColUID)
             {
-                case "cCsCd": validate_PrdDisc_CustCode(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
-                case "cItmCd": validate_PrdDisc_ItemCodePrcnt(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
-                case "cItmNm": validate_PrdDisc_ItemNamePrcnt(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
-                case "cItmC": validate_PrdDisc_ItemCodeB1G1(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
-                case "cItmN": validate_PrdDisc_ItemNameB1G1(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
-                case "cItmCB": validate_PrdDisc_ItemCodeBns(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
-                case "cItmNB": validate_PrdDisc_ItemNameBns(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
+                case "cCsCd": validate_PrdDisc_CustCode(formUID, ref pVal, ref bubbleEvent); break;
+                case "cItmCd": validate_PrdDisc_ItemCodePrcnt(formUID, ref pVal, ref bubbleEvent); break;
+                case "cItmNm": validate_PrdDisc_ItemNamePrcnt(formUID, ref pVal, ref bubbleEvent); break;
+                case "cItmC": validate_PrdDisc_ItemCodeB1G1(formUID, ref pVal, ref bubbleEvent); break;
+                case "cItmN": validate_PrdDisc_ItemNameB1G1(formUID, ref pVal, ref bubbleEvent); break;
+                case "cItmCB": validate_PrdDisc_ItemCodeBns(formUID, ref pVal, ref bubbleEvent); break;
+                case "cItmNB": validate_PrdDisc_ItemNameBns(formUID, ref pVal, ref bubbleEvent); break;
             }
         }
 
         /// <summary>
         /// Validate - Customer Code in tab Customer
         /// </summary>
-        private void validate_PrdDisc_CustCode(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void validate_PrdDisc_CustCode(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
             if (bubbleEvent)
             {
@@ -611,8 +614,7 @@ namespace SalesPromo
         /// <summary>
         /// Validate - Item Code in tab Discount %
         /// </summary>
-        private void validate_PrdDisc_ItemCodePrcnt(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void validate_PrdDisc_ItemCodePrcnt(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
             if (bubbleEvent)
             {
@@ -668,8 +670,7 @@ namespace SalesPromo
         /// <summary>
         /// Validate - Item Name in tab Discount %
         /// </summary>
-        private void validate_PrdDisc_ItemNamePrcnt(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void validate_PrdDisc_ItemNamePrcnt(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
             if (bubbleEvent)
             {
@@ -725,8 +726,7 @@ namespace SalesPromo
         /// <summary>
         /// Validate - Item Code in tab Buy 1 Get 1
         /// </summary>
-        private void validate_PrdDisc_ItemCodeB1G1(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void validate_PrdDisc_ItemCodeB1G1(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
             if (bubbleEvent)
             {
@@ -782,8 +782,7 @@ namespace SalesPromo
         /// <summary>
         /// Validate - Item Name in tab Buy 1 Get 1
         /// </summary>
-        private void validate_PrdDisc_ItemNameB1G1(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void validate_PrdDisc_ItemNameB1G1(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
             if (bubbleEvent)
             {
@@ -839,8 +838,7 @@ namespace SalesPromo
         /// <summary>
         /// Validate - Item Code Bonus in tab Buy 1 Get 1
         /// </summary>
-        private void validate_PrdDisc_ItemCodeBns(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void validate_PrdDisc_ItemCodeBns(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
             if (bubbleEvent)
             {
@@ -896,8 +894,7 @@ namespace SalesPromo
         /// <summary>
         /// Validate - Item Name Bonus in tab Buy 1 Get 1
         /// </summary>
-        private void validate_PrdDisc_ItemNameBns(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void validate_PrdDisc_ItemNameBns(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
             if (bubbleEvent)
             {
@@ -957,19 +954,18 @@ namespace SalesPromo
         /// <summary>
         /// Combo box select
         /// </summary>
-        private void Combo_PrdDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void Combo_PrdDisc(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
             switch (pVal.ItemUID)
             {
-                case "cbCustType": Combo_PrdDisc_CustType(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
+                case "cbCustType": Combo_PrdDisc_CustType(formUID, ref pVal, ref bubbleEvent); break;
             }
         }
+
         /// <summary>
         /// Combo box - Customer type in tab customer
         /// </summary>
-        private void Combo_PrdDisc_CustType(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        private void Combo_PrdDisc_CustType(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
         {
 
             if (pVal.BeforeAction == true && pVal.ItemChanged == true)

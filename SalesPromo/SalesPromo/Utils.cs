@@ -918,9 +918,9 @@ namespace SalesPromo
                                     , string QueryName
                                     , string FormID
                                     , string ItemID
-                                    , BoYesNoEnum autoRefresh
-                                    , BoYesNoEnum refreshByField
-                                    , BoYesNoEnum forceRefresh
+                                    //, BoYesNoEnum autoRefresh
+                                    //, BoYesNoEnum refreshByField
+                                    //, BoYesNoEnum forceRefresh
                                     , string ColID = null
                                     , string userField = null)
         {
@@ -972,9 +972,9 @@ namespace SalesPromo
                 oFormattedSearch.ColumnID = ColID;
                 oFormattedSearch.Action = SAPbobsCOM.BoFormattedSearchActionEnum.bofsaQuery;
                 oFormattedSearch.QueryID = QueryId;
-                oFormattedSearch.Refresh = autoRefresh;
-                oFormattedSearch.ForceRefresh = forceRefresh;
-                oFormattedSearch.ByField = refreshByField;
+                //oFormattedSearch.Refresh = autoRefresh;
+                //oFormattedSearch.ForceRefresh = forceRefresh;
+                //oFormattedSearch.ByField = refreshByField;
                 oFormattedSearch.FieldID = userField;
                 lRetCode = oFormattedSearch.Add();
 
@@ -999,9 +999,9 @@ namespace SalesPromo
                     oFormattedSearch.ColumnID = ColID;
                     oFormattedSearch.Action = SAPbobsCOM.BoFormattedSearchActionEnum.bofsaQuery;
                     oFormattedSearch.QueryID = QueryId;
-                    oFormattedSearch.ForceRefresh = forceRefresh;
-                    oFormattedSearch.Refresh = autoRefresh;
-                    oFormattedSearch.ByField = refreshByField;
+                    //oFormattedSearch.ForceRefresh = forceRefresh;
+                    //oFormattedSearch.Refresh = autoRefresh;
+                    //oFormattedSearch.ByField = refreshByField;
                     oFormattedSearch.FieldID = userField;
 
                     lRetCode = oFormattedSearch.Update();

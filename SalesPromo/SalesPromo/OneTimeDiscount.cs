@@ -10,15 +10,24 @@ namespace SalesPromo
 {
     public class OneTimeDiscount
     {
+        private SAPbouiCOM.Application oSBOApplication;
+        private SAPbobsCOM.Company oSBOCompany;
+
+        public OneTimeDiscount(SAPbouiCOM.Application oSBOApplication, SAPbobsCOM.Company oSBOCompany)
+        {
+            this.oSBOApplication = oSBOApplication;
+            this.oSBOCompany = oSBOCompany;
+        }
+
         /// <summary>
         /// Menu Event One Time Discount
         /// When click menu, this event called
         /// </summary>
-        public void MenuEvent_CashDisc(ref Application oSBOApplication, ref MenuEvent pVal, out bool bubbleEvent)
+        public void MenuEvent_CashDisc(ref MenuEvent pVal, out bool bubbleEvent)
         {
             bubbleEvent = true;
 
-            if(pVal.BeforeAction == false)
+            if (pVal.BeforeAction == false)
             {
                 Form oForm = null;
 
@@ -27,14 +36,14 @@ namespace SalesPromo
                     oForm = Utils.createForm(ref oSBOApplication, "CashDisc");
                     oForm.Visible = true;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     bubbleEvent = false;
                     oSBOApplication.StatusBar.SetText(ex.Message, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
                 }
                 finally
                 {
-                    if(oForm != null)
+                    if (oForm != null)
                     {
                         if (bubbleEvent)
                         {
@@ -53,121 +62,90 @@ namespace SalesPromo
         /// Item Event
         /// </summary>
         #region Item Event
-        public void ItemEvent_CashDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, 
-                                        string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
+        public void ItemEvent_CashDisc(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
         {
             switch (pVal.EventType)
             {
-                case BoEventTypes.et_FORM_LOAD:; break;
-                case BoEventTypes.et_CHOOSE_FROM_LIST: CFL_CashDisc(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent); break;
+                case BoEventTypes.et_VALIDATE: Validate_CashDisc(formUID, ref pVal, ref bubbleEvent);break;
             }
         }
 
-        private void CFL_CashDisc(ref SAPbobsCOM.Company oSBOCompany, ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent)
+        /// <summary>
+        /// Validate
+        /// </summary>
+        private void Validate_CashDisc(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
         {
-            IChooseFromListEvent oCFLEvent = null;
-            try
+            switch (pVal.ItemUID)
             {
-                oCFLEvent = (IChooseFromListEvent)pVal;
-
-                switch (pVal.ItemUID)
-                {
-                    case "tCusCd": CFL_CashDisc_Cust(ref oSBOCompany, ref oSBOApplication, formUID, ref pVal, ref bubbleEvent, ref oCFLEvent); break;
-                }
-
-            }
-            catch(Exception ex)
-            {
-                bubbleEvent = false;
-                oSBOApplication.MessageBox(ex.Message);
-            }
-            finally
-            {
-                Utils.releaseObject(oCFLEvent);
+                case "tCusCd": Validate_CashDisc_CustCode(formUID, ref pVal, ref bubbleEvent); break;
             }
         }
 
-        private void CFL_CashDisc_Cust(ref SAPbobsCOM.Company oSBOCompany,ref Application oSBOApplication, string formUID, ref ItemEvent pVal,
-                                        ref bool bubbleEvent, ref IChooseFromListEvent oCFLEvent)
+        /// <summary>
+        /// Validate customer code - nomor memo
+        /// </summary>
+        private void Validate_CashDisc_CustCode(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
         {
             if (bubbleEvent)
             {
-                Form oForm = null;
-                Conditions oCons = null;
-                Condition oCon = null;
-                SAPbouiCOM.ChooseFromList oCFL = null;
-                DataTable oDataTable = null;
-                BusinessPartners oBP = null;
-                DBDataSource oDBSource_H = null;
-
-                try
+                if (pVal.BeforeAction == false && pVal.ActionSuccess == true && pVal.ItemChanged == true)
                 {
-                    oForm = oSBOApplication.Forms.GetForm(pVal.FormTypeEx, pVal.FormTypeCount);
-                    oBP = oSBOCompany.GetBusinessObject(BoObjectTypes.oBusinessPartners);
+                    Form oForm = oSBOApplication.Forms.Item(formUID);
+                    DBDataSource dtSource = oForm.DataSources.DBDataSources.Item("@SOL_CASHDISC");
+                    Recordset oRec = oSBOCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
 
-                    if (oCFLEvent.BeforeAction == true)
+                    try
                     {
-                        if (oForm.Mode == BoFormMode.fm_ADD_MODE)
-                        {
-                            oForm.Freeze(true);
-                            oCFL = oForm.ChooseFromLists.Item("CFL_CUST");
-
-                            // Add conditions
-                            oCFL.SetConditions(null);
-                            oCons = oCFL.GetConditions();
-
-                            oCon = oCons.Add();
-                            oCon.Alias = "CardType";
-                            oCon.Operation = BoConditionOperation.co_EQUAL;
-                            oCon.Relationship = BoConditionRelationship.cr_AND;
-                            oCon.CondVal = "C";
-
-                            oCon = oCons.Add();
-                            oCon.Alias = "validFor";
-                            oCon.Operation = BoConditionOperation.co_EQUAL;
-                            oCon.CondVal = "Y";
-
-                            oCFL.SetConditions(oCons);
-                        }
+                        oForm.Freeze(true);
+                        string noMemo = GenerateNoMemo(oForm.Items.Item("tCusCd").Specific.Value);
+                        dtSource.SetValue("Code", 0, noMemo);
                     }
-                    else if (oCFLEvent.BeforeAction == false && oCFLEvent.ActionSuccess == true && oCFLEvent.SelectedObjects != null)
+                    catch (Exception ex)
                     {
-                        if (oForm.Mode == BoFormMode.fm_ADD_MODE || oForm.Mode == BoFormMode.fm_UPDATE_MODE || oForm.Mode == BoFormMode.fm_OK_MODE)
-                        {
-                            oForm.Freeze(true);
-                            oDataTable = oCFLEvent.SelectedObjects;
-
-                            if (oBP.GetByKey(oDataTable.GetValue("CardCode", 0)))
-                            {
-                                oDBSource_H = oForm.DataSources.DBDataSources.Item("@SOL_CASHDISC");
-                                oDBSource_H.SetValue("U_SOL_CARDCODE", 0, oBP.CardCode);
-
-                                if (oForm.Mode != BoFormMode.fm_ADD_MODE)
-                                    oForm.Mode = BoFormMode.fm_UPDATE_MODE;
-                            }
-                        }
+                        bubbleEvent = false;
+                        oSBOApplication.MessageBox(ex.Message);
                     }
-                }
-                catch(Exception ex)
-                {
-                    bubbleEvent = false;
-                    oSBOApplication.MessageBox(ex.Message + " : " + ex.StackTrace);
-                }
-                finally
-                {
-                    if (oForm != null) oForm.Freeze(false);
+                    finally
+                    {
+                        if (oForm != null) oForm.Freeze(false);
 
-                    Utils.releaseObject(oForm);
-                    Utils.releaseObject(oCons);
-                    Utils.releaseObject(oCon);
-                    Utils.releaseObject(oCFL);
-                    Utils.releaseObject(oDataTable);
-                    Utils.releaseObject(oBP);
-                    Utils.releaseObject(oDBSource_H);
+                        Utils.releaseObject(oForm);
+                        Utils.releaseObject(dtSource);
+                        Utils.releaseObject(oRec);
+                    }
                 }
             }
         }
         #endregion
+
+        /// <summary>
+        /// Generate nomor memo
+        /// </summary>
+        private string GenerateNoMemo(string cardCode)
+        {
+            string runNumber = string.Empty;
+            Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
+
+            try
+            {
+                if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
+                    oRec.DoQuery("CALL SOL_SP_ADDON_CD_CODE ('" + cardCode + "')");
+
+                if (oRec.RecordCount > 0)
+                {
+                    runNumber = oRec.Fields.Item("RunNumber").Value;
+                }
+            }
+            catch (Exception ex)
+            {
+                oSBOApplication.MessageBox(ex.Message);
+            }
+            finally
+            {
+                Utils.releaseObject(oRec);
+            }
+
+            return runNumber;
+        }
     }
 }
