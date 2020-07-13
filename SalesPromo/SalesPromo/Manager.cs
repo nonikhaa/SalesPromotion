@@ -321,6 +321,7 @@ namespace SalesPromo
         {
             CreateFMS_PrdDisc();
             CreateFMS_FixDisc();
+            CreateFMS_CashDisc();
         }
 
         /// <summary>
@@ -347,14 +348,14 @@ namespace SalesPromo
             Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - PRDDISC - Item Name", "SOL - PRDDISC - Item Name.sql");
 
             // Create FMS
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Area", formId, "tArea", BoYesNoEnum.tNO, BoYesNoEnum.tNO, BoYesNoEnum.tNO);
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Customer Code", formId, "mt_1", BoYesNoEnum.tNO, BoYesNoEnum.tNO, BoYesNoEnum.tNO, "cCsCd");
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Code", formId, "mt_2", BoYesNoEnum.tNO, BoYesNoEnum.tNO, BoYesNoEnum.tNO, "cItmCd");
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Name", formId, "mt_2", BoYesNoEnum.tNO, BoYesNoEnum.tNO, BoYesNoEnum.tNO, "cItmNm");
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Code", formId, "mt_3", BoYesNoEnum.tNO, BoYesNoEnum.tNO, BoYesNoEnum.tNO, "cItmC");
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Code", formId, "mt_3", BoYesNoEnum.tNO, BoYesNoEnum.tNO, BoYesNoEnum.tNO, "cItmCB");
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Name", formId, "mt_3", BoYesNoEnum.tNO, BoYesNoEnum.tNO, BoYesNoEnum.tNO, "cItmN");
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Name", formId, "mt_3", BoYesNoEnum.tNO, BoYesNoEnum.tNO, BoYesNoEnum.tNO, "cItmNB");
+            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Area", formId, "tArea");
+            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Customer Code", formId, "mt_1", "cCsCd");
+            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Code", formId, "mt_2", "cItmCd");
+            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Name", formId, "mt_2", "cItmNm");
+            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Code", formId, "mt_3", "cItmC");
+            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Code", formId, "mt_3", "cItmCB");
+            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Name", formId, "mt_3", "cItmN");
+            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Name", formId, "mt_3", "cItmNB");
         }
 
         /// <summary>
@@ -379,9 +380,26 @@ namespace SalesPromo
             Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - FIXDISC - Item Code", "SOL - FIXDISC - Item Code.sql");
 
             // Create FMS
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - FIXDISC - Area", formId, "tArea", BoYesNoEnum.tNO, BoYesNoEnum.tNO, BoYesNoEnum.tNO);
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - FIXDISC - Brand Code", formId, "mt_1", BoYesNoEnum.tNO, BoYesNoEnum.tNO, BoYesNoEnum.tNO, "cBrCd");
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - FIXDISC - Item Code", formId, "mt_2", BoYesNoEnum.tNO, BoYesNoEnum.tNO, BoYesNoEnum.tNO, "cItmCd");
+            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - FIXDISC - Area", formId, "tArea");
+            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - FIXDISC - Brand Code", formId, "mt_1", "cBrCd");
+            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - FIXDISC - Item Code", formId, "mt_2", "cItmCd");
+        }
+
+        private void CreateFMS_CashDisc()
+        {
+            Utils.CreateQueryCategory(oSBOCompany, "ADDON - One Time Discount");
+            string queryCategory = "ADDON - One Time Discount";
+            string formId = "CASHDISC";
+
+            if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
+            {
+                Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - CASHDISC - Customer Code", "HANA - SOL - CASHDISC - Customer Code.sql");
+                Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - CASHDISC - Currency", "HANA - SOL - CASHDISC - Currency.sql");
+            }
+
+            // Create FMS
+            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - CASHDISC - Customer Code", formId, "tCusCd");
+            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - CASHDISC - Currency", formId, "tCurr");
         }
 
         #endregion
@@ -435,6 +453,8 @@ namespace SalesPromo
                 if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
                 {
                     Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SBO_SP_TRANSACTIONNOTIFICATION_CASHDISC.sql", "SBO_SP_TRANSACTIONNOTIFICATION_CASHDISC");
+                    Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_CD_CURRENCY.sql", "SOL_SP_ADDON_CD_CURRENCY");
+                    Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_CD_CODE.sql", "SOL_SP_ADDON_CD_CODE");
                 }
                 else
                 {
