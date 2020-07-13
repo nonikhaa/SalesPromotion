@@ -269,6 +269,7 @@ namespace SalesPromo
                 //double discount = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("15").Cells.Item(i).Specific.Value);
                 string detailStatus = oMtx.Columns.Item("40").Cells.Item(i).Specific.Value;
                 string itemBonus = oMtx.Columns.Item("U_SOL_FLGBNS").Cells.Item(i).Specific.Value;
+                string delDate = oMtx.Columns.Item("25").Cells.Item(i).Specific.Value;
 
                 #region Fix Disc
 
@@ -284,11 +285,23 @@ namespace SalesPromo
                 MatrixSo mtxFixDisc = new MatrixSo();
                 if (oRec.RecordCount > 0 && groupFixDisc.Select(o => o.ItemCode).ToList().Contains(itemCode))
                 {
-                    groupFixDisc.Where(o => o.ItemCode == itemCode).ToList().ForEach(a => { a.Quantity += qty; a.Area = "ALL"; });
+                    groupFixDisc.Where(o => o.ItemCode == itemCode).ToList().ForEach(a =>
+                    {
+                        a.Quantity += qty;
+                        a.Area = "ALL";
+                        if (DateTime.ParseExact(a.DeliveryDate, "yyyyMMdd", null) < DateTime.ParseExact(delDate, "yyyyMMdd", null))
+                            a.DeliveryDate = delDate;
+                    });
                 }
                 else if (oRec.RecordCount <= 0 && groupFixDisc.Where(o => o.ItemCode == itemCode && o.Area == area).Select(o => o.ItemCode).ToList().Contains(itemCode))
                 {
-                    groupFixDisc.Where(o => o.ItemCode == itemCode && o.Area == area).ToList().ForEach(a => { a.Quantity += qty; a.Area = area; });
+                    groupFixDisc.Where(o => o.ItemCode == itemCode && o.Area == area).ToList().ForEach(a => 
+                    {
+                        a.Quantity += qty;
+                        a.Area = area;
+                        if (DateTime.ParseExact(a.DeliveryDate, "yyyyMMdd", null) < DateTime.ParseExact(delDate, "yyyyMMdd", null))
+                            a.DeliveryDate = delDate;
+                    });
                 }
                 else
                 {
@@ -296,6 +309,7 @@ namespace SalesPromo
                     mtxFixDisc.Quantity = qty;
                     mtxFixDisc.FlagBonus = itemBonus;
                     mtxFixDisc.Area = area;
+                    mtxFixDisc.DeliveryDate = delDate;
 
                     groupFixDisc.Add(mtxFixDisc);
                 }
@@ -306,7 +320,12 @@ namespace SalesPromo
                 MatrixSo mtxPrdDisc = new MatrixSo();
                 if (groupPrdDisc.Select(o => o.ItemCode).ToList().Contains(itemCode))
                 {
-                    groupPrdDisc.Where(o => o.ItemCode == itemCode).ToList().ForEach(a => a.Quantity += qty);
+                    groupPrdDisc.Where(o => o.ItemCode == itemCode).ToList().ForEach(a => 
+                    {
+                        a.Quantity += qty;
+                        if (DateTime.ParseExact(a.DeliveryDate, "yyyyMMdd", null) < DateTime.ParseExact(delDate, "yyyyMMdd", null))
+                            a.DeliveryDate = delDate;
+                    });
                 }
                 else
                 {
@@ -314,6 +333,7 @@ namespace SalesPromo
                     mtxPrdDisc.Quantity = qty;
                     mtxPrdDisc.Area = area;
                     mtxPrdDisc.FlagBonus = itemBonus;
+                    mtxPrdDisc.DeliveryDate = delDate;
 
                     groupPrdDisc.Add(mtxPrdDisc);
                 }
@@ -475,7 +495,7 @@ namespace SalesPromo
             }
 
             #region Periodic Discount - Buy X get Y
-            var dataBonus = listDiscSO.Where(o => o.DiscountType == "2");
+            var dataBonus = listDiscSO.Where(o => o.DiscountType == "2").ToList();
 
             if (dataBonus.Count() > 0)
             {
@@ -483,18 +503,19 @@ namespace SalesPromo
                 {
                     if (detail.CustomerType == "All Customer" || (detail.CustomerType == "Per Customer" && detail.CustomerCode == cardCode))
                     {
-                        var groupItem = groupPrdDisc.Where(o => o.ItemCode == detail.ItemCode).FirstOrDefault();
+                        var groupItem = groupPrdDisc.Where(o => o.ItemCode == detail.BXGYItemCd).FirstOrDefault();
                         int currentRow = oMtx.RowCount;
                         double qtyFree = detail.BXGYQtyFree;
                         double minQty = detail.BXGYMinQty;
 
                         oMtx.Columns.Item("1").Cells.Item(currentRow).Specific.Value = detail.BXGYItemBns;
+                        oMtx.Columns.Item("25").Cells.Item(currentRow).Specific.Value = groupItem.DeliveryDate;
                         oMtx.Columns.Item("U_SOL_PDCD").Cells.Item(currentRow).Specific.Value = detail.PrdDiscCode;
                         oMtx.Columns.Item("U_SOL_FLGBNS").Cells.Item(currentRow).Specific.Value = "Y";
                         oMtx.Columns.Item("U_SOL_ADDSC").Cells.Item(currentRow).Specific.Value = 100;
                         oMtx.Columns.Item("15").Cells.Item(currentRow).Specific.Value = 100; // discount
 
-                        if (detail.Kelipatan == "No")
+                        if (detail.Kelipatan == "N")
                             oMtx.Columns.Item("11").Cells.Item(currentRow).Specific.Value = qtyFree;
                         else
                         {

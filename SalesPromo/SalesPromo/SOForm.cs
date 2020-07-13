@@ -115,7 +115,7 @@ namespace SalesPromo
         public double SapDisc;
         public string Address;
         public string FlagBonus;
-
+        public string DeliveryDate;
     }
 
 
