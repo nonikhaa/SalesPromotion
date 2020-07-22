@@ -200,6 +200,8 @@ namespace SalesPromo
             Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_PD", "Periodic Disc (%)", BoFieldTypes.db_Float, BoFldSubTypes.st_Percentage, 15);
             Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_PDCD", "Code", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 9);
             Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_FLGBNS", "Bonus Item", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 2);
+            Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_ITMCDORI", "Item Code Original", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 15);
+            Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_ITMNMORI", "Item Name Original", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 100);
             #endregion
         }
 

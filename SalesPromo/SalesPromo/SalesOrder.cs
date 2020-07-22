@@ -514,6 +514,9 @@ namespace SalesPromo
                         oMtx.Columns.Item("U_SOL_FLGBNS").Cells.Item(currentRow).Specific.Value = "Y";
                         oMtx.Columns.Item("U_SOL_ADDSC").Cells.Item(currentRow).Specific.Value = 100;
                         oMtx.Columns.Item("15").Cells.Item(currentRow).Specific.Value = 100; // discount
+                        oMtx.Columns.Item("U_SOL_ITMCDORI").Cells.Item(currentRow).Specific.Value = detail.ItemCode;
+                        oMtx.Columns.Item("U_SOL_ITMNMORI").Cells.Item(currentRow).Specific.Value = GetItemName(detail.ItemCode);
+
 
                         if (detail.Kelipatan == "N")
                             oMtx.Columns.Item("11").Cells.Item(currentRow).Specific.Value = qtyFree;
@@ -605,6 +608,8 @@ namespace SalesPromo
             oMtx.Columns.Item("U_SOL_PDCD").Editable = param;
             oMtx.Columns.Item("U_SOL_FDCD").Editable = param;
             oMtx.Columns.Item("U_SOL_FLGBNS").Editable = param;
+            oMtx.Columns.Item("U_SOL_ITMCDORI").Editable = param;
+            oMtx.Columns.Item("U_SOL_ITMNMORI").Editable = param;
             oUdfForm.Items.Item("U_SOL_CASHDISC").Enabled = param;
             oUdfForm.Items.Item("U_SOL_APPLDISC").Enabled = param;
         }
@@ -679,6 +684,22 @@ namespace SalesPromo
 
             Utils.releaseObject(oRec);
             return delivered;
+        }
+
+        private string GetItemName(string itemCode)
+        {
+            string itemName = string.Empty;
+            Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
+            string query = "SELECT \"ItemName\" FROM OITM WHERE \"ItemCode\" = '" + itemCode + "'";
+            oRec.DoQuery(query);
+
+            if (oRec.RecordCount > 0)
+            {
+                itemName = oRec.Fields.Item("ItemName").Value;
+            }
+
+            Utils.releaseObject(oRec);
+            return itemName;
         }
     }
 }
