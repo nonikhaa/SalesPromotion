@@ -314,11 +314,18 @@ namespace SalesPromo
                 DataTable oDataTable = null;
                 BusinessPartners oBp = null;
                 DBDataSource oDBSource_H = null;
+                Matrix oMtx1 = null;
+                Matrix oMtx2 = null;
 
                 try
                 {
                     oForm = oSBOApplication.Forms.GetForm(pVal.FormTypeEx, pVal.FormTypeCount);
                     oBp = oSBOCompany.GetBusinessObject(BoObjectTypes.oBusinessPartners);
+                    oMtx1 = oForm.Items.Item("mt_1").Specific;
+                    oMtx2 = oForm.Items.Item("mt_2").Specific;
+
+                    DBDataSource fixDisc_D1 = oForm.DataSources.DBDataSources.Item("@SOL_FIXDISC_D1");
+                    DBDataSource fixDisc_D2 = oForm.DataSources.DBDataSources.Item("@SOL_FIXDISC_D2");
 
                     if (oCFLEvent.BeforeAction == true)
                     {
@@ -361,6 +368,20 @@ namespace SalesPromo
 
                             if (oForm.Mode != BoFormMode.fm_ADD_MODE)
                                 oForm.Mode = BoFormMode.fm_UPDATE_MODE;
+
+                            if(oMtx1.RowCount <= 0 || oMtx2.RowCount <= 0)
+                            {
+                                fixDisc_D1.InsertRecord(fixDisc_D1.Size);
+                                fixDisc_D2.InsertRecord(fixDisc_D2.Size);
+
+                                fixDisc_D1.Offset = fixDisc_D1.Size - 1;
+                                fixDisc_D1.SetValue("LineId", fixDisc_D1.Size - 1, fixDisc_D1.Size.ToString());
+                                fixDisc_D2.Offset = fixDisc_D2.Size - 1;
+                                fixDisc_D2.SetValue("LineId", fixDisc_D2.Size - 1, fixDisc_D2.Size.ToString());
+
+                                oForm.Items.Item("mt_1").Specific.LoadFromDataSource();
+                                oForm.Items.Item("mt_2").Specific.LoadFromDataSource();
+                            }
                         }
                     }
                 }

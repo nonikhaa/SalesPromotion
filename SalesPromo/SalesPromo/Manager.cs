@@ -196,9 +196,9 @@ namespace SalesPromo
 
             Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_ADDSC", "Add-On Disc (%)", BoFieldTypes.db_Float, BoFldSubTypes.st_Percentage, 15);
             Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_FD", "Fix Disc (%)", BoFieldTypes.db_Float, BoFldSubTypes.st_Percentage, 15);
-            Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_FDCD", "Code", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 14);
+            Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_FDCD", "Fix Disc Code", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 14);
             Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_PD", "Periodic Disc (%)", BoFieldTypes.db_Float, BoFldSubTypes.st_Percentage, 15);
-            Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_PDCD", "Code", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 9);
+            Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_PDCD", "Period Disc Code", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 9);
             Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_FLGBNS", "Bonus Item", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 2);
             Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_ITMCDORI", "Item Code Original", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 15);
             Utils.CreateUDF(oSBOCompany, "RDR1", "SOL_ITMNMORI", "Item Name Original", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 100);
@@ -350,7 +350,7 @@ namespace SalesPromo
             Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - PRDDISC - Item Name", "SOL - PRDDISC - Item Name.sql");
 
             // Create FMS
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Area", formId, "tArea");
+            //Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Area", formId, "tArea", null, null);
             Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Customer Code", formId, "mt_1", "cCsCd");
             Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Code", formId, "mt_2", "cItmCd");
             Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - PRDDISC - Item Name", formId, "mt_2", "cItmNm");
@@ -369,7 +369,7 @@ namespace SalesPromo
             string queryCategory = "ADDON - Fix Discount";
             string formId = "FIXDISC";
 
-            if(oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
+            if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
             {
                 Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - FIXDISC - Area", "HANA - SOL - FIXDISC - Area.sql");
             }
@@ -377,12 +377,12 @@ namespace SalesPromo
             {
                 Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - FIXDISC - Area", "SQL - SOL - FIXDISC - Area.sql");
             }
-            
+
             Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - FIXDISC - Brand Code", "SOL - FIXDISC - Brand Code.sql");
             Utils.CreateQueryFromText(oSBOCompany, oSBOApplication, queryCategory, "SOL - FIXDISC - Item Code", "SOL - FIXDISC - Item Code.sql");
 
             // Create FMS
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - FIXDISC - Area", formId, "tArea");
+            //Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - FIXDISC - Area", formId, "tArea", null, null);
             Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - FIXDISC - Brand Code", formId, "mt_1", "cBrCd");
             Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - FIXDISC - Item Code", formId, "mt_2", "cItmCd");
         }
@@ -400,8 +400,8 @@ namespace SalesPromo
             }
 
             // Create FMS
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - CASHDISC - Customer Code", formId, "tCusCd");
-            Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - CASHDISC - Currency", formId, "tCurr");
+            //Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - CASHDISC - Customer Code", formId, "tCusCd", null, null);
+            //Utils.CreateFMS(oSBOCompany, queryCategory, "SOL - CASHDISC - Currency", formId, "tCurr", null, null);
         }
 
         #endregion
@@ -505,6 +505,8 @@ namespace SalesPromo
                     Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_GET_PRDDISC.sql", "SOL_SP_ADDON_GET_PRDDISC");
                     Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_GET_CASHDISC.sql", "SOL_SP_ADDON_GET_CASHDISC");
                     Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_GET_FIXDISC.sql", "SOL_SP_ADDON_GET_FIXDISC");
+                    Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_GET_DISCAREA.sql", "SOL_SP_ADDON_GET_DISCAREA");
+                    Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_VALIDATE_CALCULATE.sql", "SOL_SP_ADDON_VALIDATE_CALCULATE");
                     Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SBO_SP_TRANSACTIONNOTIFICATION_ADDONSO.sql", "SBO_SP_TRANSACTIONNOTIFICATION_ADDONSO");
                 }
                 else
@@ -530,14 +532,23 @@ namespace SalesPromo
             {
                 string dir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
                 string dirPathSP = dir + @"\SP\";
+                string dirPathMain = dir + @"\";
 
                 if (oSBOCompany.DbServerType == BoDataServerTypes.dst_HANADB)
                 {
                     #region HANA
-                    string fileName = Path.Combine(dirPathSP, Path.GetFileName("HANA - SBO_SP_TransactionNotification.sql"));
-
-                    if (File.Exists(fileName))
+                    
+                    if (File.Exists(Path.Combine(dirPathSP, Path.GetFileName("HANA - SBO_SP_TransactionNotification.sql"))))
                     {
+                        string fileName = Path.Combine(dirPathSP, Path.GetFileName("HANA - SBO_SP_TransactionNotification.sql"));
+                        using (StreamReader sr = new StreamReader(fileName))
+                        {
+                            qCustomSPValidation = sr.ReadToEnd();
+                        }
+                    }
+                    else if(File.Exists(Path.Combine(dirPathMain, Path.GetFileName("HANA - SBO_SP_TransactionNotification.sql"))))
+                    {
+                        string fileName = Path.Combine(dirPathMain, Path.GetFileName("HANA - SBO_SP_TransactionNotification.sql"));
                         using (StreamReader sr = new StreamReader(fileName))
                         {
                             qCustomSPValidation = sr.ReadToEnd();

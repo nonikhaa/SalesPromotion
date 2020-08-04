@@ -898,9 +898,19 @@ namespace SalesPromo
             {
                 string dir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
                 string dirPathFMS = dir + @"\FMS\";
+                string dirPathMainFMS = System.Windows.Forms.Application.StartupPath + @"\";
+                string readText = string.Empty;
 
-                string path = Path.Combine(dirPathFMS, Path.GetFileName(textFile));
-                string readText = File.ReadAllText(path);
+                if (File.Exists(Path.Combine(dirPathFMS, Path.GetFileName(textFile))))
+                {
+                    string path = Path.Combine(dirPathFMS, Path.GetFileName(textFile));
+                    readText = File.ReadAllText(path);
+                }
+                else if(File.Exists(Path.Combine(dirPathMainFMS, Path.GetFileName(textFile))))
+                {
+                    string path = Path.Combine(dirPathMainFMS, Path.GetFileName(textFile));
+                    readText = File.ReadAllText(path);
+                }
 
                 if (!string.IsNullOrEmpty(readText))
                 {
@@ -1043,12 +1053,27 @@ namespace SalesPromo
                 {
                     string dir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
                     string dirPathSP = dir + @"\SP\";
-                    string directory = Path.Combine(dirPathSP, Path.GetFileName(fileName));
+                    string dirPathMainSP = System.Windows.Forms.Application.StartupPath + @"\";
 
-                    using (StreamReader sr = new StreamReader(directory))
+                    if (File.Exists(Path.Combine(dirPathSP, Path.GetFileName(fileName))))
                     {
-                        string line = sr.ReadToEnd();
-                        oRec.DoQuery(line);
+                        string directory = Path.Combine(dirPathSP, Path.GetFileName(fileName));
+
+                        using (StreamReader sr = new StreamReader(directory))
+                        {
+                            string line = sr.ReadToEnd();
+                            oRec.DoQuery(line);
+                        }
+                    }
+                    else if (File.Exists(Path.Combine(dirPathMainSP, Path.GetFileName(fileName))))
+                    {
+                        string directory = Path.Combine(dirPathMainSP, Path.GetFileName(fileName));
+
+                        using (StreamReader sr = new StreamReader(directory))
+                        {
+                            string line = sr.ReadToEnd();
+                            oRec.DoQuery(line);
+                        }
                     }
                 }
 
@@ -1182,11 +1207,20 @@ namespace SalesPromo
 
             string dir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             string path = dir + @"\SRF\";
+            string pathMain = dir + @"\";
 
-            //string path = "../../SRF/";
-            oXMLDoc.Load(path + srfName + ".srf");
-            oCreationPackage.XmlData = oXMLDoc.InnerXml;
-            oCreationPackage.BorderStyle = BoFormBorderStyle.fbs_Sizable;
+            if(File.Exists(path + srfName + ".srf"))
+            {
+                oXMLDoc.Load(path + srfName + ".srf");
+                oCreationPackage.XmlData = oXMLDoc.InnerXml;
+                oCreationPackage.BorderStyle = BoFormBorderStyle.fbs_Sizable;
+            }
+            else if(File.Exists(pathMain + srfName + ".srf"))
+            {
+                oXMLDoc.Load(pathMain + srfName + ".srf");
+                oCreationPackage.XmlData = oXMLDoc.InnerXml;
+                oCreationPackage.BorderStyle = BoFormBorderStyle.fbs_Sizable;
+            }
 
             return oApp.Forms.AddEx(oCreationPackage);
         }

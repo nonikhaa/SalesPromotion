@@ -81,8 +81,9 @@ namespace SalesPromo
                             GeneralVariables.oSOCurrent.UniqueID = oForm.UniqueID;
                             GeneralVariables.oSOCurrent.CardCode = oForm.Items.Item("4").Specific.Value;
                             GeneralVariables.oSOCurrent.PostingDate = oForm.Items.Item("10").Specific.Value;
+                            string tipeSO = oUdfForm.Items.Item("U_SOL_TIPE_SO").Specific.Value;
 
-                            if (AllowedCalculate(GeneralVariables.oSOCurrent.CardCode))
+                            if (AllowedCalculate(GeneralVariables.oSOCurrent.CardCode, tipeSO))
                             {
                                 if (!AlreadyDeliv(docNum))
                                 {
@@ -101,7 +102,7 @@ namespace SalesPromo
                             }
                             else
                             {
-                                oSBOApplication.MessageBox("User group is not allowed to Calculate Discount.");
+                                oSBOApplication.MessageBox("User Group dan Tipe SO tidak diperbolehkan Calculate Discount.");
                             }
                         }
                         catch (Exception ex)
@@ -263,7 +264,8 @@ namespace SalesPromo
             for (int i = 1; i < oMtx.RowCount; i++)
             {
                 string itemCode = oMtx.Columns.Item("1").Cells.Item(i).Specific.Value;
-                double qty = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("11").Cells.Item(i).Specific.Value);
+                string qtySAP = oMtx.Columns.Item("11").Cells.Item(i).Specific.Value;
+                double qty = Convert.ToDouble(qtySAP.Replace(".", ","));
                 string address = oMtx.Columns.Item("275").Cells.Item(i).Specific.Value;
                 string area = GetAreaByCust(cardCode, address);
                 //double discount = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("15").Cells.Item(i).Specific.Value);
@@ -295,7 +297,7 @@ namespace SalesPromo
                 }
                 else if (oRec.RecordCount <= 0 && groupFixDisc.Where(o => o.ItemCode == itemCode && o.Area == area).Select(o => o.ItemCode).ToList().Contains(itemCode))
                 {
-                    groupFixDisc.Where(o => o.ItemCode == itemCode && o.Area == area).ToList().ForEach(a => 
+                    groupFixDisc.Where(o => o.ItemCode == itemCode && o.Area == area).ToList().ForEach(a =>
                     {
                         a.Quantity += qty;
                         a.Area = area;
@@ -320,7 +322,7 @@ namespace SalesPromo
                 MatrixSo mtxPrdDisc = new MatrixSo();
                 if (groupPrdDisc.Select(o => o.ItemCode).ToList().Contains(itemCode))
                 {
-                    groupPrdDisc.Where(o => o.ItemCode == itemCode).ToList().ForEach(a => 
+                    groupPrdDisc.Where(o => o.ItemCode == itemCode).ToList().ForEach(a =>
                     {
                         a.Quantity += qty;
                         if (DateTime.ParseExact(a.DeliveryDate, "yyyyMMdd", null) < DateTime.ParseExact(delDate, "yyyyMMdd", null))
@@ -447,7 +449,8 @@ namespace SalesPromo
             for (int i = 1; i < oMtx.RowCount; i++)
             {
                 string itemCode = oMtx.Columns.Item("1").Cells.Item(i).Specific.Value;
-                double qty = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("11").Cells.Item(i).Specific.Value);
+                string qtySAP = oMtx.Columns.Item("11").Cells.Item(i).Specific.Value;
+                double qty = Convert.ToDouble(qtySAP.Replace(".", ","));
                 string address = oMtx.Columns.Item("275").Cells.Item(i).Specific.Value;
                 string area = GetAreaByCust(cardCode, address);
 
@@ -643,20 +646,17 @@ namespace SalesPromo
         /// <summary>
         /// Check user group allowed for calculate or not
         /// </summary>
-        private bool AllowedCalculate(string cardCode)
+        private bool AllowedCalculate(string cardCode, string tipeSO)
         {
             bool calculate = false;
 
             Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
-            string query = " SELECT OCRG.\"U_SOL_CALC_DISC\" FROM OCRD "
-                            + "INNER JOIN OCRG ON OCRD.\"GroupCode\" = OCRG.\"GroupCode\" "
-                            + "WHERE OCRD.\"CardCode\" = '" + cardCode + "'";
+            string query = "CALL SOL_SP_ADDON_VALIDATE_CALCULATE('" + cardCode + "', '" + tipeSO + "')";
             oRec.DoQuery(query);
 
             if (oRec.RecordCount > 0)
             {
-                string check = oRec.Fields.Item("U_SOL_CALC_DISC").Value;
-                if (check == "Y") { calculate = true; }
+                calculate = true;
             }
 
             Utils.releaseObject(oRec);
