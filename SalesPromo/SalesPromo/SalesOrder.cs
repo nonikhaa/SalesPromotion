@@ -102,7 +102,7 @@ namespace SalesPromo
                             }
                             else
                             {
-                                oSBOApplication.MessageBox("User Group dan Tipe SO tidak diperbolehkan Calculate Discount.");
+                                oSBOApplication.MessageBox("Customer Group dan Tipe SO tidak diperbolehkan Calculate Discount.");
                             }
                         }
                         catch (Exception ex)
@@ -451,6 +451,7 @@ namespace SalesPromo
                 string itemCode = oMtx.Columns.Item("1").Cells.Item(i).Specific.Value;
                 string qtySAP = oMtx.Columns.Item("11").Cells.Item(i).Specific.Value;
                 double qty = Convert.ToDouble(qtySAP.Replace(".", ","));
+                string curr = oForm.Items.Item("63").Specific.Value;
                 string address = oMtx.Columns.Item("275").Cells.Item(i).Specific.Value;
                 string area = GetAreaByCust(cardCode, address);
 
@@ -486,13 +487,26 @@ namespace SalesPromo
                 #endregion
 
                 #region All Row Discount
-                double lineTotal = Utils.SBOToWindowsNumberWithCurrency(oMtx.Columns.Item("21").Cells.Item(i).Specific.Value);
+                double lineTotal = 0;
+
+                // Ambil line total
+                if(curr == "IDR")
+                    lineTotal = Utils.SBOToWindowsNumberWithCurrency(oMtx.Columns.Item("21").Cells.Item(i).Specific.Value);
+                else
+                    lineTotal = Utils.SBOToWindowsNumberWithCurrency(oMtx.Columns.Item("23").Cells.Item(i).Specific.Value);
+
+                // Hitung diskon
                 double calculate = 0;
                 calculate = (lineTotal - (lineTotal * (fixDisc / 100))) - ((lineTotal - (lineTotal * (fixDisc / 100))) * (prdDisc / 100));
 
-                oMtx.Columns.Item("21").Cells.Item(i).Specific.Value = Utils.WindowsToSBONumber(calculate);
+                // Assign jumlah line total
+                if (curr == "IDR")
+                    oMtx.Columns.Item("21").Cells.Item(i).Specific.Value = Utils.WindowsToSBONumber(calculate);
+                else
+                    oMtx.Columns.Item("23").Cells.Item(i).Specific.Value = Utils.WindowsToSBONumber(calculate);
+
                 oMtx.Columns.Item("U_SOL_ADDSC").Cells.Item(i).Specific.Value = Utils.WindowsToSBONumber((fixDisc + prdDisc) - ((fixDisc / 10) * (prdDisc / 10)));
-                oMtx.Columns.Item("21").Cells.Item(i).Click();
+                oMtx.Columns.Item("3").Cells.Item(i).Click();
 
                 #endregion
             }
@@ -537,7 +551,8 @@ namespace SalesPromo
             #endregion
 
             #region One Time Discount
-            double discTotal = Utils.SBOToWindowsNumberWithoutCurrency(oForm.Items.Item("24").Specific.Value);
+            string disc = oForm.Items.Item("24").Specific.Value;
+            double discTotal = Convert.ToDouble(disc.Replace(".", ","));
             string currency = oForm.Items.Item("63").Specific.Value;
             double priceA = Utils.SBOToWindowsNumberWithCurrency(oForm.Items.Item("22").Specific.Value);
             string price = priceA.ToString().Replace(",", ".");
