@@ -352,7 +352,7 @@ namespace SalesPromo
                             oCFL.SetConditions(oCons);
                         }
                     }
-                    else if (oCFLEvent.BeforeAction == false && oCFLEvent.ActionSuccess == true && oCFLEvent.SelectedObjects != null)
+                    else if (oCFLEvent.BeforeAction == false && oCFLEvent.ActionSuccess == true && oCFLEvent.SelectedObjects != null && oCFLEvent.FormMode != 0)
                     {
                         oForm.Freeze(true);
                         oDataTable = oCFLEvent.SelectedObjects;

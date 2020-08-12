@@ -27,6 +27,7 @@ namespace SalesPromo
                 if (pVal.BeforeAction == false && pVal.ActionSuccess == true && pVal.EventType == BoEventTypes.et_FORM_LOAD)
                 {
                     Form oForm = oSBOApplication.Forms.Item(formUID);
+                    //Matrix oMtx = oForm.Items.Item("38").Specific;
                     Item oItmBtn = null;
                     Button oBtn = null;
                     Item sapCancelButton = oForm.Items.Item("2");
@@ -44,6 +45,9 @@ namespace SalesPromo
                         oItmBtn.LinkTo = "2";
                         oBtn = oForm.Items.Item("btnDisc").Specific;
                         oBtn.Caption = "Calculate Discount";
+
+                        //EditText oFlagBns = oMtx.Columns.Item("U_SOL_FLGBNS").Cells.Item(0).Specific;
+                        //oFlagBns.Active = true;
                     }
                     catch (Exception ex)
                     {
