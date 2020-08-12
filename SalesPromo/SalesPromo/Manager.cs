@@ -506,14 +506,16 @@ namespace SalesPromo
                     Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_GET_CASHDISC.sql", "SOL_SP_ADDON_GET_CASHDISC");
                     Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_GET_FIXDISC.sql", "SOL_SP_ADDON_GET_FIXDISC");
                     Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_GET_DISCAREA.sql", "SOL_SP_ADDON_GET_DISCAREA");
+                    Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_GET_PRICE.sql", "SOL_SP_ADDON_GET_PRICE");
                     Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SOL_SP_ADDON_VALIDATE_CALCULATE.sql", "SOL_SP_ADDON_VALIDATE_CALCULATE");
                     Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "HANA - SBO_SP_TRANSACTIONNOTIFICATION_ADDONSO.sql", "SBO_SP_TRANSACTIONNOTIFICATION_ADDONSO");
+
                 }
                 else
                 {
-                    Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "SQL - SOL_SP_ADDON_GET_FIXDISC.sql", "SOL_SP_ADDON_GET_FIXDISC");
-                    Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "SQL - SOL_SP_ADDON_GET_CASHDISC.sql", "SOL_SP_ADDON_GET_CASHDISC");
-                    Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "SQL - SOL_SP_ADDON_GET_PRDDISC.sql", "SOL_SP_ADDON_GET_PRDDISC");
+                    //Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "SQL - SOL_SP_ADDON_GET_FIXDISC.sql", "SOL_SP_ADDON_GET_FIXDISC");
+                    //Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "SQL - SOL_SP_ADDON_GET_CASHDISC.sql", "SOL_SP_ADDON_GET_CASHDISC");
+                    //Utils.CreateSP(ref oSBOCompany, ref oSBOApplication, "SQL - SOL_SP_ADDON_GET_PRDDISC.sql", "SOL_SP_ADDON_GET_PRDDISC");
                 }
             }
             catch (Exception ex)

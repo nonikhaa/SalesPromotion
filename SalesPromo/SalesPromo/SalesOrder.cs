@@ -268,7 +268,6 @@ namespace SalesPromo
                 double qty = Convert.ToDouble(qtySAP.Replace(".", ","));
                 string address = oMtx.Columns.Item("275").Cells.Item(i).Specific.Value;
                 string area = GetAreaByCust(cardCode, address);
-                //double discount = Utils.SBOToWindowsNumberWithoutCurrency(oMtx.Columns.Item("15").Cells.Item(i).Specific.Value);
                 string detailStatus = oMtx.Columns.Item("40").Cells.Item(i).Specific.Value;
                 string itemBonus = oMtx.Columns.Item("U_SOL_FLGBNS").Cells.Item(i).Specific.Value;
                 string delDate = oMtx.Columns.Item("25").Cells.Item(i).Specific.Value;
@@ -406,12 +405,12 @@ namespace SalesPromo
                                     a.CustomerType = oRec.Fields.Item("CustType").Value;
                                     a.CustomerCode = oRec.Fields.Item("CustCode").Value;
                                     a.PrdDiscCode = oRec.Fields.Item("Code").Value;
-                                    a.PrcntDisc = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("DiscPrcnt").Value);
-                                    a.PrcntMinQty = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinQtyPrcnt").Value);
+                                    a.PrcntDisc = oRec.Fields.Item("DiscPrcnt").Value;
+                                    a.PrcntMinQty = oRec.Fields.Item("MinQtyPrcnt").Value;
                                     a.BXGYItemCd = oRec.Fields.Item("ItemCodeBG").Value;
-                                    a.BXGYMinQty = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinQtyBG").Value);
+                                    a.BXGYMinQty = oRec.Fields.Item("MinQtyBG").Value;
                                     a.BXGYItemBns = oRec.Fields.Item("ItemCodeFree").Value;
-                                    a.BXGYQtyFree = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("QtyFree").Value);
+                                    a.BXGYQtyFree = oRec.Fields.Item("QtyFree").Value;
                                     a.Kelipatan = oRec.Fields.Item("Kelipatan").Value;
                                 });
                         }
@@ -422,12 +421,12 @@ namespace SalesPromo
                             discSO.CustomerType = oRec.Fields.Item("CustType").Value;
                             discSO.CustomerCode = oRec.Fields.Item("CustCode").Value;
                             discSO.PrdDiscCode = oRec.Fields.Item("Code").Value;
-                            discSO.PrcntDisc = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("DiscPrcnt").Value);
-                            discSO.PrcntMinQty = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinQtyPrcnt").Value);
+                            discSO.PrcntDisc = oRec.Fields.Item("DiscPrcnt").Value;
+                            discSO.PrcntMinQty = oRec.Fields.Item("MinQtyPrcnt").Value;
                             discSO.BXGYItemCd = oRec.Fields.Item("ItemCodeBG").Value;
-                            discSO.BXGYMinQty = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("MinQtyBG").Value);
+                            discSO.BXGYMinQty = oRec.Fields.Item("MinQtyBG").Value;
                             discSO.BXGYItemBns = oRec.Fields.Item("ItemCodeFree").Value;
-                            discSO.BXGYQtyFree = Utils.SBOToWindowsNumberWithoutCurrency(oRec.Fields.Item("QtyFree").Value);
+                            discSO.BXGYQtyFree = oRec.Fields.Item("QtyFree").Value;
                             discSO.Kelipatan = oRec.Fields.Item("Kelipatan").Value;
                             listDiscSO.Add(discSO);
                         }
@@ -490,7 +489,7 @@ namespace SalesPromo
                 double lineTotal = 0;
 
                 // Ambil line total
-                if(curr == "IDR")
+                if (curr == "IDR")
                     lineTotal = Utils.SBOToWindowsNumberWithCurrency(oMtx.Columns.Item("21").Cells.Item(i).Specific.Value);
                 else
                     lineTotal = Utils.SBOToWindowsNumberWithCurrency(oMtx.Columns.Item("23").Cells.Item(i).Specific.Value);
@@ -513,6 +512,7 @@ namespace SalesPromo
 
             #region Periodic Discount - Buy X get Y
             var dataBonus = listDiscSO.Where(o => o.DiscountType == "2").ToList();
+            string tipeSO = oUdfForm.Items.Item("U_SOL_TIPE_SO").Specific.Value;
 
             if (dataBonus.Count() > 0)
             {
@@ -530,10 +530,11 @@ namespace SalesPromo
                         oMtx.Columns.Item("U_SOL_PDCD").Cells.Item(currentRow).Specific.Value = detail.PrdDiscCode;
                         oMtx.Columns.Item("U_SOL_FLGBNS").Cells.Item(currentRow).Specific.Value = "Y";
                         oMtx.Columns.Item("U_SOL_ADDSC").Cells.Item(currentRow).Specific.Value = 100;
-                        oMtx.Columns.Item("15").Cells.Item(currentRow).Specific.Value = 100; // discount
                         oMtx.Columns.Item("U_SOL_ITMCDORI").Cells.Item(currentRow).Specific.Value = detail.ItemCode;
                         oMtx.Columns.Item("U_SOL_ITMNMORI").Cells.Item(currentRow).Specific.Value = GetItemName(detail.ItemCode);
-
+                        double prc = GetPrice(detail.BXGYItemBns, cardCode, tipeSO, GetDefaultAddress(cardCode));
+                        oMtx.Columns.Item("20").Cells.Item(currentRow).Specific.Value = prc; // gross price after disc
+                        oMtx.Columns.Item("15").Cells.Item(currentRow).Specific.Value = 100; // discount
 
                         if (detail.Kelipatan == "N")
                             oMtx.Columns.Item("11").Cells.Item(currentRow).Specific.Value = qtyFree;
@@ -701,6 +702,9 @@ namespace SalesPromo
             return delivered;
         }
 
+        /// <summary>
+        /// Get Item Name
+        /// </summary>
         private string GetItemName(string itemCode)
         {
             string itemName = string.Empty;
@@ -715,6 +719,49 @@ namespace SalesPromo
 
             Utils.releaseObject(oRec);
             return itemName;
+        }
+
+        /// <summary>
+        /// Get gross price after discount
+        /// </summary>
+        private double GetPrice(string itemCode, string cardCode, string tipeSO, string shipTo)
+        {
+            double price = 0;
+            Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
+            string query = "CALL SOL_SP_ADDON_GET_PRICE('" + itemCode + "', '" + cardCode + "', '" + tipeSO + "', '" + shipTo + "')";
+            oRec.DoQuery(query);
+
+            if (oRec.RecordCount > 0)
+            {
+                price = oRec.Fields.Item("Price").Value;
+            }
+
+            Utils.releaseObject(oRec);
+            return price;
+        }
+
+        /// <summary>
+        /// Get default ship to address
+        /// </summary>
+        private string GetDefaultAddress(string cardCode)
+        {
+            string address = string.Empty;
+            Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
+            string query = "SELECT OCRD.\"ShipToDef\" FROM OCRD "
+                            + "LEFT JOIN CRD1 ON OCRD.\"CardCode\" = CRD1.\"CardCode\" "
+                            + "WHERE OCRD.\"CardCode\" = '" + cardCode + "' "
+                            + "AND CRD1.\"AdresType\" = 'S'";
+
+            oRec.DoQuery(query);
+
+            if (oRec.RecordCount > 0)
+            {
+                address = oRec.Fields.Item("ShipToDef").Value;
+            }
+
+            Utils.releaseObject(oRec);
+            return address;
+
         }
     }
 }

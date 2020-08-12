@@ -77,7 +77,7 @@ namespace SalesPromo
                     case "96969": oneTimeDisc.MenuEvent_CashDisc(ref pVal, out BubbleEvent); break;
                     case "51115": prdDisc.MenuEvent_PrdDisc(ref pVal, out BubbleEvent); break;
                     case "32323": fixDisc.MenuEvent_FixDisc(ref pVal, out BubbleEvent); break;
-                    
+
                     // Add
                     case "1282": MenuEventHandlerAdd(ref pVal, out BubbleEvent); break;
                     // next record
@@ -88,6 +88,9 @@ namespace SalesPromo
                     case "1290": MenuEventHandlerNextPrev(ref pVal, out BubbleEvent); break;
                     // last data record
                     case "1291": MenuEventHandlerNextPrev(ref pVal, out BubbleEvent); break;
+                    // Refresh
+                    //case "1304"
+
 
                     case "PrdDiscAdd": prdDisc.MenuEvent_PrdDiscAdd(ref pVal, ref BubbleEvent); break;
                     case "PrdDiscDel": prdDisc.MenuEvent_PrdDiscDel(ref pVal, ref BubbleEvent); break;

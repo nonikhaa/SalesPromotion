@@ -906,7 +906,7 @@ namespace SalesPromo
                     string path = Path.Combine(dirPathFMS, Path.GetFileName(textFile));
                     readText = File.ReadAllText(path);
                 }
-                else if(File.Exists(Path.Combine(dirPathMainFMS, Path.GetFileName(textFile))))
+                else if (File.Exists(Path.Combine(dirPathMainFMS, Path.GetFileName(textFile))))
                 {
                     string path = Path.Combine(dirPathMainFMS, Path.GetFileName(textFile));
                     readText = File.ReadAllText(path);
@@ -1209,13 +1209,13 @@ namespace SalesPromo
             string path = dir + @"\SRF\";
             string pathMain = dir + @"\";
 
-            if(File.Exists(path + srfName + ".srf"))
+            if (File.Exists(path + srfName + ".srf"))
             {
                 oXMLDoc.Load(path + srfName + ".srf");
                 oCreationPackage.XmlData = oXMLDoc.InnerXml;
                 oCreationPackage.BorderStyle = BoFormBorderStyle.fbs_Sizable;
             }
-            else if(File.Exists(pathMain + srfName + ".srf"))
+            else if (File.Exists(pathMain + srfName + ".srf"))
             {
                 oXMLDoc.Load(pathMain + srfName + ".srf");
                 oCreationPackage.XmlData = oXMLDoc.InnerXml;
@@ -1289,6 +1289,12 @@ namespace SalesPromo
             }
             catch { obj = null; }
             finally { GC.Collect(); }
+        }
+
+        public static double StringToDouble(string amountValue)
+        {
+            double result = Convert.ToDouble(amountValue.Replace(".", ","));
+            return result;
         }
     }
 }
