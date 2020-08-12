@@ -423,6 +423,7 @@ namespace SalesPromo
                 case BoEventTypes.et_CHOOSE_FROM_LIST: CFL_PrdDisc(formUID, ref pVal, ref bubbleEvent); break;
                 case BoEventTypes.et_VALIDATE: Validate_PrdDisc(formUID, ref pVal, ref bubbleEvent); break;
                 case BoEventTypes.et_COMBO_SELECT: Combo_PrdDisc(formUID, ref pVal, ref bubbleEvent); break;
+                case BoEventTypes.et_CLICK: PrdDisc_Click(formUID, ref pVal, ref bubbleEvent); break;
             }
         }
         /// <summary>
@@ -1006,6 +1007,24 @@ namespace SalesPromo
 
                     Utils.releaseObject(oForm);
                     Utils.releaseObject(oMtx);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reload code when click add
+        /// </summary>
+        private void PrdDisc_Click(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
+        {
+            if (pVal.ItemUID == "1")
+            {
+                if (pVal.FormMode == (int)BoFormMode.fm_ADD_MODE)
+                {
+                    if (pVal.BeforeAction == true)
+                    {
+                        Form oForm = oSBOApplication.Forms.Item(formUID);
+                        oForm.Items.Item("tCode").Specific.Value = GenerateCode();
+                    }
                 }
             }
         }

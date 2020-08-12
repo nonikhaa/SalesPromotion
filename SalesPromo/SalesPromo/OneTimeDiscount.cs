@@ -67,6 +67,7 @@ namespace SalesPromo
             switch (pVal.EventType)
             {
                 case BoEventTypes.et_VALIDATE: Validate_CashDisc(formUID, ref pVal, ref bubbleEvent);break;
+                case BoEventTypes.et_CLICK: CashDisc_Click(formUID, ref pVal, ref bubbleEvent); break;
             }
         }
 
@@ -78,6 +79,25 @@ namespace SalesPromo
             switch (pVal.ItemUID)
             {
                 case "tCusCd": Validate_CashDisc_CustCode(formUID, ref pVal, ref bubbleEvent); break;
+            }
+        }
+
+        /// <summary>
+        /// Reload no memo when click add
+        /// </summary>
+        private void CashDisc_Click(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
+        {
+            if(pVal.ItemUID == "1")
+            {
+                if(pVal.FormMode == (int)BoFormMode.fm_ADD_MODE)
+                {
+                    if(pVal.BeforeAction == true)
+                    {
+                        Form oForm = oSBOApplication.Forms.Item(formUID);
+                        string cardCode = oForm.Items.Item("tCusCd").Specific.Value;
+                        oForm.Items.Item("txtCode").Specific.Value = GenerateNoMemo(cardCode);
+                    }
+                }
             }
         }
 

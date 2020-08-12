@@ -272,6 +272,7 @@ namespace SalesPromo
                 case BoEventTypes.et_FORM_LOAD:; break;
                 case BoEventTypes.et_CHOOSE_FROM_LIST: CFL_FixDisc(formUID, ref pVal, ref bubbleEvent); break;
                 case BoEventTypes.et_VALIDATE: Validate_FixDisc(formUID, ref pVal, ref bubbleEvent); break;
+                case BoEventTypes.et_CLICK: FixDisc_Click(formUID, ref pVal, ref bubbleEvent); break;
             }
         }
 
@@ -401,6 +402,25 @@ namespace SalesPromo
                     Utils.releaseObject(oDataTable);
                     Utils.releaseObject(oBp);
                     Utils.releaseObject(oDBSource_H);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reload code when click add
+        /// </summary>
+        private void FixDisc_Click(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
+        {
+            if (pVal.ItemUID == "1")
+            {
+                if (pVal.FormMode == (int)BoFormMode.fm_ADD_MODE)
+                {
+                    if (pVal.BeforeAction == true)
+                    {
+                        Form oForm = oSBOApplication.Forms.Item(formUID);
+                        string cardCode = oForm.Items.Item("tCustCd").Specific.Value;
+                        oForm.Items.Item("tCode").Specific.Value = GenerateCode(cardCode);
+                    }
                 }
             }
         }
