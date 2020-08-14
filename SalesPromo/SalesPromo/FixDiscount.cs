@@ -76,7 +76,7 @@ namespace SalesPromo
 
                 oForm.Items.Item("tab2").Click();
                 oForm.Items.Item("tab1").Click();
-                
+
                 oForm.Items.Item("tCustCd").Click();
 
                 Utils.releaseObject(dtSource);
@@ -279,7 +279,7 @@ namespace SalesPromo
         /// <summary>
         /// Choose From List
         /// </summary>
-        private void CFL_FixDisc(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
+        private void CFL_FixDisc(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
         {
             IChooseFromListEvent oCFLEvent = null;
             try
@@ -304,7 +304,7 @@ namespace SalesPromo
         /// <summary>
         /// CFL Customer Code
         /// </summary>
-        private void CFL_FixDisc_CustCode(string formUID, ref ItemEvent pVal,ref bool bubbleEvent, ref IChooseFromListEvent oCFLEvent)
+        private void CFL_FixDisc_CustCode(string formUID, ref ItemEvent pVal, ref bool bubbleEvent, ref IChooseFromListEvent oCFLEvent)
         {
             if (bubbleEvent)
             {
@@ -370,7 +370,7 @@ namespace SalesPromo
                             if (oForm.Mode != BoFormMode.fm_ADD_MODE)
                                 oForm.Mode = BoFormMode.fm_UPDATE_MODE;
 
-                            if(oMtx1.RowCount <= 0 || oMtx2.RowCount <= 0)
+                            if (oMtx1.RowCount <= 0 || oMtx2.RowCount <= 0)
                             {
                                 fixDisc_D1.InsertRecord(fixDisc_D1.Size);
                                 fixDisc_D2.InsertRecord(fixDisc_D2.Size);
@@ -413,6 +413,8 @@ namespace SalesPromo
         {
             if (pVal.ItemUID == "1")
             {
+                
+
                 if (pVal.FormMode == (int)BoFormMode.fm_ADD_MODE)
                 {
                     if (pVal.BeforeAction == true)
@@ -493,7 +495,7 @@ namespace SalesPromo
         /// <summary>
         /// Validate Event
         /// </summary>
-        private void Validate_FixDisc(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
+        private void Validate_FixDisc(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
         {
             switch (pVal.ColUID)
             {
@@ -506,7 +508,7 @@ namespace SalesPromo
         /// Validate - Brand Code
         /// Ketika Brand Code Dipilih, Brand Name terisi otomatis
         /// </summary>
-        private void Validate_FixDisc_BrandCode(string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
+        private void Validate_FixDisc_BrandCode(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
         {
             if (bubbleEvent)
             {
@@ -567,7 +569,7 @@ namespace SalesPromo
         /// Validate - Item Code
         /// Ketika Item Code Dipilih, Item Name terisi otomatis
         /// </summary>
-        private void Validate_FixDisc_ItemCode( string formUID, ref ItemEvent pVal,ref bool bubbleEvent)
+        private void Validate_FixDisc_ItemCode(string formUID, ref ItemEvent pVal, ref bool bubbleEvent)
         {
             if (bubbleEvent)
             {
