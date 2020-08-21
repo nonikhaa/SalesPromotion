@@ -86,27 +86,24 @@ namespace SalesPromo
                             GeneralVariables.oSOCurrent.CardCode = oForm.Items.Item("4").Specific.Value;
                             GeneralVariables.oSOCurrent.PostingDate = oForm.Items.Item("10").Specific.Value;
                             string tipeSO = oUdfForm.Items.Item("U_SOL_TIPE_SO").Specific.Value;
+                            string errorMsg = string.Empty;
 
-                            if (AllowedCalculate(GeneralVariables.oSOCurrent.CardCode, tipeSO))
+                            // validate
+                            errorMsg = AllowedCalculate(oMtx, GeneralVariables.oSOCurrent.CardCode, tipeSO, docNum);
+
+                            if (string.IsNullOrEmpty(errorMsg))
                             {
-                                if (!AlreadyDeliv(docNum))
+                                if (pVal.FormMode == (int)BoFormMode.fm_ADD_MODE || pVal.FormMode == (int)BoFormMode.fm_UPDATE_MODE)
                                 {
-                                    if (pVal.FormMode == (int)BoFormMode.fm_ADD_MODE || pVal.FormMode == (int)BoFormMode.fm_UPDATE_MODE)
-                                    {
-                                        oForm.Freeze(true);
+                                    oForm.Freeze(true);
 
-                                        ActiveRowUdf(true, ref oMtx, ref oUdfForm);
-                                        CalculateDiscount(oForm.UniqueID, GeneralVariables.oSOCurrent.CardCode, GeneralVariables.oSOCurrent.PostingDate);
-                                    }
-                                }
-                                else
-                                {
-                                    oSBOApplication.MessageBox("You cannot Calculate Discount if one item or more has been delivered or closed.");
+                                    ActiveRowUdf(true, ref oMtx, ref oUdfForm);
+                                    CalculateDiscount(oForm.UniqueID, GeneralVariables.oSOCurrent.CardCode, GeneralVariables.oSOCurrent.PostingDate);
                                 }
                             }
                             else
                             {
-                                oSBOApplication.MessageBox("Customer Group dan Tipe SO tidak diperbolehkan Calculate Discount.");
+                                oSBOApplication.MessageBox(errorMsg);
                             }
                         }
                         catch (Exception ex)
@@ -666,46 +663,30 @@ namespace SalesPromo
         /// <summary>
         /// Check user group allowed for calculate or not
         /// </summary>
-        private bool AllowedCalculate(string cardCode, string tipeSO)
+        private string AllowedCalculate(Matrix oMtx, string cardCode, string tipeSO, string DocNum)
         {
-            bool calculate = false;
-
+            string message = string.Empty;
             Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
-            string query = "CALL SOL_SP_ADDON_VALIDATE_CALCULATE('" + cardCode + "', '" + tipeSO + "')";
-            oRec.DoQuery(query);
 
-            if (oRec.RecordCount > 0)
+            for (int i = 1; i < oMtx.RowCount; i++)
             {
-                calculate = true;
+                string itemCode = oMtx.Columns.Item("1").Cells.Item(i).Specific.Value;
+                string shipTo = oMtx.Columns.Item("275").Cells.Item(i).Specific.Value;
+
+                string query = "CALL SOL_SP_ADDON_VALIDATE_CALCULATE('" + cardCode + "', '" + tipeSO + "', '" + DocNum + "', '" + itemCode + "', '" + shipTo + "')";
+                oRec.DoQuery(query);
+
+                if (oRec.RecordCount > 0)
+                {
+                    message = oRec.Fields.Item("Message").Value;
+                    break;
+                }
             }
 
             Utils.releaseObject(oRec);
-            return calculate;
+            return message;
         }
-
-        /// <summary>
-        /// Check sales order already delivered or not
-        /// </summary>
-        private bool AlreadyDeliv(string docNum)
-        {
-            bool delivered = false;
-
-            Recordset oRec = oSBOCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
-            string query = "SELECT DISTINCT 'TRUE' FROM ORDR "
-                            + "LEFT JOIN RDR1 ON RDR1.\"DocEntry\" = ORDR.\"DocEntry\" "
-                            + "WHERE ORDR.\"DocNum\" = " + docNum + " AND ORDR.\"CANCELED\" = 'N'"
-                            + "AND (RDR1.\"LineStatus\" = 'C' OR RDR1.\"Quantity\" <> RDR1.\"OpenQty\")";
-            oRec.DoQuery(query);
-
-            if (oRec.RecordCount > 0)
-            {
-                delivered = true;
-            }
-
-            Utils.releaseObject(oRec);
-            return delivered;
-        }
-
+               
         /// <summary>
         /// Get Item Name
         /// </summary>
